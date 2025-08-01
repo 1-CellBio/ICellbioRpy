@@ -64,7 +64,7 @@ seurat_to_h5ad <- function(seurat_obj,
   tryCatch({
     configure_python_env(verbose = FALSE)
   }, error = function(e) {
-    warning("Failed to configure Python environment: ", e$message)
+    warning("Failed to configure Python environment: ", as.character(e$message))
     warning("Please ensure anndata is installed in your Python environment or specify a conda environment:")
     warning("  configure_python_env(conda_env = \"your_env_name\")")
     stop("Python environment configuration failed")
@@ -147,7 +147,7 @@ seurat_to_h5ad <- function(seurat_obj,
             if (verbose) cat("Added layer:", paste0(assay_name, "_data"), "\n")
           }
         }, error = function(e) {
-          if (verbose) cat("Warning: Could not add", assay_name, "data layer:", e$message, "\n")
+          if (verbose) cat("Warning: Could not add", assay_name, "data layer:", as.character(e$message), "\n")
         })
         
         tryCatch({
@@ -158,7 +158,7 @@ seurat_to_h5ad <- function(seurat_obj,
             if (verbose) cat("Added layer:", paste0(assay_name, "_counts"), "\n")
           }
         }, error = function(e) {
-          if (verbose) cat("Warning: Could not add", assay_name, "counts layer:", e$message, "\n")
+          if (verbose) cat("Warning: Could not add", assay_name, "counts layer:", as.character(e$message), "\n")
         })
       }
     }
@@ -175,7 +175,7 @@ seurat_to_h5ad <- function(seurat_obj,
         if (verbose) cat("Added counts layer from default assay\n")
       }
     }, error = function(e) {
-      if (verbose) cat("Warning: Could not add counts layer:", e$message, "\n")
+      if (verbose) cat("Warning: Could not add counts layer:", as.character(e$message), "\n")
     })
   } else {
     # Add data as a layer if available
@@ -187,7 +187,7 @@ seurat_to_h5ad <- function(seurat_obj,
         if (verbose) cat("Added logcounts layer from default assay\n")
       }
     }, error = function(e) {
-      if (verbose) cat("Warning: Could not add logcounts layer:", e$message, "\n")
+      if (verbose) cat("Warning: Could not add logcounts layer:", as.character(e$message), "\n")
     })
   }
   
@@ -205,7 +205,7 @@ seurat_to_h5ad <- function(seurat_obj,
         adata$obsm[[h5ad_name]] <- reduction_data
         if (verbose) cat("Added reduction:", h5ad_name, "with dimensions", dim(reduction_data)[2], "\n")
       }, error = function(e) {
-        if (verbose) cat("Warning: Could not add reduction", reduction_name, ":", e$message, "\n")
+        if (verbose) cat("Warning: Could not add reduction", reduction_name, ":", as.character(e$message), "\n")
       })
     }
   }

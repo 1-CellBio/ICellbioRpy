@@ -1,4 +1,4 @@
-# 1CellbioRpy
+# ICellbioRpy
 
 An R package for reading 1Cellbio pipeline results directly from zip files and converting them to Seurat, SingleCellExperiment objects, or h5ad format.
 
@@ -12,8 +12,8 @@ This package provides functions to directly read compressed 1Cellbio single-cell
 # Install devtools if you haven't already
 install.packages("devtools")
 
-# Install 1CellbioRpy from GitHub
-devtools::install_github("your_username/1CellbioRpy")
+# Install ICellbioRpy from GitHub
+devtools::install_github("your_username/ICellbioRpy")
 ```
 
 ## Python Environment Configuration
@@ -25,7 +25,7 @@ devtools::install_github("your_username/1CellbioRpy")
 All h5ad-related functions now automatically use your current Python environment:
 
 ```r
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # These functions automatically configure Python environment using current environment
 iCellbio2H5ad("data.zip", "output.h5ad")  # Auto-configures Python
@@ -58,7 +58,7 @@ For detailed troubleshooting, see `anndata_installation_guide.md`.
 ### Method 1: Two-step conversion (via 1CellbioData object)
 
 ```r
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # Read 1Cellbio results from zip file
 data <- read1Cellbio("path/to/1cellbio_results.zip")
@@ -76,7 +76,7 @@ as.h5ad(data, "output.h5ad")
 ### Method 2: Direct conversion to h5ad (Memory Efficient + Sparse Matrix Preservation)
 
 ```r
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # Convert directly from zip file to h5ad format
 # This preserves sparse matrix format and is highly memory efficient
@@ -87,7 +87,7 @@ iCellbio2H5ad("path/to/1cellbio_results.zip", "output.h5ad")
 ### Method 3: Convert h5ad files to R objects (Reverse conversion)
 
 ```r
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # Convert h5ad file to SingleCellExperiment
 sce <- h5ad_to_sce("data.h5ad")
@@ -104,7 +104,7 @@ seurat_obj <- h5ad_to_seurat("data.h5ad", use_x_as = "counts")
 ### Method 4: Convert Seurat objects to h5ad files
 
 ```r
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # Convert Seurat object to h5ad file
 seurat_to_h5ad(seurat_obj, "output.h5ad")
@@ -190,7 +190,7 @@ The h5ad file contains:
 
 ```r
 # Load the package
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # Read the data
 data <- read1Cellbio("path/to/1cellbio_results.zip")
@@ -224,7 +224,7 @@ DimPlot(seurat, reduction = "umap", group.by = "level1class")
 
 ```r
 # Load the package
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # For large datasets, convert directly to h5ad format
 # This preserves sparse matrix format and avoids creating intermediate R objects

@@ -76,7 +76,8 @@ configure_python_env <- function(python_path = NULL, conda_env = NULL, verbose =
     }
     
   }, error = function(e) {
-    warning("Failed to configure Python environment: ", e$message)
+    error_msg <- if(is.character(e$message)) e$message else as.character(e$message)
+    warning("Failed to configure Python environment: ", error_msg)
     return(invisible(FALSE))
   })
   

@@ -1,4 +1,4 @@
-Package: 1CellbioRpy
+Package: ICellbioRpy
 Type: Package
 Title: Read and Convert 1Cellbio Results to Seurat or SingleCellExperiment
 Version: 0.1.0
@@ -18,7 +18,7 @@ Imports:
     utils,
     Matrix,
     anndata,
-    reticulate (== 1.39.0)
+    reticulate (<= 1.42.0)
 Suggests:
     testthat,
     knitr,

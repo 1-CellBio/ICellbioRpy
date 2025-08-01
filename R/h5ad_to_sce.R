@@ -57,7 +57,7 @@ h5ad_to_sce <- function(h5ad_file, use_x_as = "logcounts", verbose = TRUE) {
   tryCatch({
     configure_python_env(verbose = FALSE)
   }, error = function(e) {
-    warning("Failed to configure Python environment: ", e$message)
+    warning("Failed to configure Python environment: ", as.character(e$message))
     warning("Please ensure anndata is installed in your Python environment or specify a conda environment:")
     warning("  configure_python_env(conda_env = \"your_env_name\")")
     stop("Python environment configuration failed")

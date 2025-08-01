@@ -1,0 +1,10 @@
+# 推送到GitHub的命令（请替换您的用户名）
+
+# 1. 添加远程仓库（替换为您的GitHub用户名）
+git remote add origin https://github.com/1-Cellbio/ICellbioRpy.git
+
+# 2. 设置主分支名称
+git branch -M main
+
+# 3. 推送到GitHub
+git push -u origin main
