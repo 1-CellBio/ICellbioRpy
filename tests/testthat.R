@@ -1,4 +1,4 @@
 library(testthat)
-library(1CellbioRpy)
+library(ICellbioRpy)
 
-test_check("1CellbioRpy")
+test_check("ICellbioRpy")

@@ -1,10 +1,10 @@
 ---
-title: "Introduction to 1CellbioRpy"
-author: "1CellbioRpy Development Team"
+title: "Introduction to ICellbioRpy"
+author: "ICellbioRpy Development Team"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction to 1CellbioRpy}
+  %\VignetteIndexEntry{Introduction to ICellbioRpy}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,9 +17,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-# 1CellbioRpy
+# ICellbioRpy
 
-The 1CellbioRpy package provides comprehensive functions to work with 1Cellbio pipeline results. It enables seamless conversion between different single-cell data formats including:
+The ICellbioRpy package provides comprehensive functions to work with 1Cellbio pipeline results. It enables seamless conversion between different single-cell data formats including:
 
 - Reading 1Cellbio zip files into R objects
 - Converting to SingleCellExperiment and Seurat objects
@@ -28,14 +28,14 @@ The 1CellbioRpy package provides comprehensive functions to work with 1Cellbio p
 
 ## Installation
 
-You can install the development version of 1CellbioRpy from GitHub:
+You can install the development version of ICellbioRpy from GitHub:
 
 ```{r}
 # Install devtools if you haven't already
 install.packages("devtools")
 
-# Install 1CellbioRpy from GitHub
-devtools::install_github("your_username/1CellbioRpy")
+# Install ICellbioRpy from GitHub
+devtools::install_github("your_username/ICellbioRpy")
 ```
 
 ## Quick Start
@@ -43,7 +43,7 @@ devtools::install_github("your_username/1CellbioRpy")
 ### Loading the package
 
 ```{r}
-library(1CellbioRpy)
+library(ICellbioRpy)
 ```
 
 ### Python Environment Configuration
