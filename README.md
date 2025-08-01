@@ -1,267 +1,290 @@
+
 # ICellbioRpy
 
-An R package for reading 1Cellbio pipeline results directly from zip files and converting them to Seurat, SingleCellExperiment objects, or h5ad format.
+用于直接从 zip 文件读取 1Cellbio 管道结果，并将其转换为 Seurat、SingleCellExperiment 对象或 h5ad 格式。
 
-## Overview
+---
 
-This package provides functions to directly read compressed 1Cellbio single-cell RNA-seq analysis results and convert them to commonly used Bioconductor/Seurat objects or h5ad format for downstream analysis.
+## 概述
 
-## Installation
+此包提供函数，可直接读取压缩的 1Cellbio 单细胞 RNA 测序分析结果，并将其转换为常用的 Bioconductor/Seurat 对象或 h5ad 格式，以便进行下游分析。
+
+---
+
+## 安装
 
 ```r
-# Install devtools if you haven't already
+# 如果您尚未安装 devtools，请先安装
 install.packages("devtools")
 
-# Install ICellbioRpy from GitHub
-devtools::install_github("your_username/ICellbioRpy")
-```
+# 从 GitHub 安装 ICellbioRpy
+devtools::install_github("1-Cellbio/ICellbioRpy")
+````
 
-## Python Environment Configuration
+-----
 
-**Important**: Starting from version 1.1.0, all functions that require Python/anndata automatically configure the Python environment using your current environment!
+## Python 环境配置
 
-### Automatic Configuration
+**重要提示**：所有需要 Python/anndata 的函数都会自动使用您当前的环境配置 Python 环境！
 
-All h5ad-related functions now automatically use your current Python environment:
+### 自动配置
+
+所有与 h5ad 相关的函数现在都会自动使用您当前的 Python 环境：
 
 ```r
 library(ICellbioRpy)
 
-# These functions automatically configure Python environment using current environment
-iCellbio2H5ad("data.zip", "output.h5ad")  # Auto-configures Python
-sce <- h5ad_to_sce("data.h5ad")             # Auto-configures Python  
-seurat_obj <- h5ad_to_seurat("data.h5ad")   # Auto-configures Python
-seurat_to_h5ad(seurat_obj, "output.h5ad")   # Auto-configures Python
+# 这些函数会自动使用当前环境配置 Python 环境
+iCellbio2H5ad("data.zip", "output.h5ad")  # 自动配置 Python
+sce <- h5ad_to_sce("data.h5ad")             # 自动配置 Python  
+seurat_obj <- h5ad_to_seurat("data.h5ad")   # 自动配置 Python
+seurat_to_h5ad(seurat_obj, "output.h5ad")   # 自动配置 Python
 ```
 
-### Manual Configuration (When Needed)
+### 手动配置（需要时）
 
-If anndata is not available in your current environment, you can specify a different one:
+如果您的当前环境中没有 anndata，您可以指定其他环境：
 
 ```r
-# Configure to use a specific conda environment
+# 配置使用特定的 conda 环境
 configure_python_env(conda_env = "your_env_name")
 
-# Or configure to use a specific Python path  
+# 或者配置使用特定的 Python 路径  
 configure_python_env(python_path = "/path/to/python")
 
-# Verify anndata is available
+# 验证 anndata 是否可用
 check_anndata_available()
 ```
 
-**Note**: If anndata is not found, the functions will provide helpful error messages with installation instructions.
+**注意**：如果找不到 anndata，函数将提供有用的错误消息和安装说明。
 
-For detailed troubleshooting, see `anndata_installation_guide.md`.
+有关详细的故障排除，请参阅 `anndata_installation_guide.md`。
 
-## Usage
+-----
 
-### Method 1: Two-step conversion (via 1CellbioData object)
+## 用法
+
+### 方法 1：两步转换（通过 1CellbioData 对象）
 
 ```r
 library(ICellbioRpy)
 
-# Read 1Cellbio results from zip file
+# 从 zip 文件读取 1Cellbio 结果
 data <- read1Cellbio("path/to/1cellbio_results.zip")
 
-# Convert to SingleCellExperiment
+# 转换为 SingleCellExperiment
 sce <- as.SingleCellExperiment(data)
 
-# Convert to Seurat object
+# 转换为 Seurat 对象
 seurat <- as.Seurat(data)
 
-# Convert to h5ad format for Scanpy
+# 转换为 h5ad 格式，用于 Scanpy
 as.h5ad(data, "output.h5ad")
 ```
 
-### Method 2: Direct conversion to h5ad (Memory Efficient + Sparse Matrix Preservation)
+### 方法 2：直接转换为 h5ad（内存高效 + 稀疏矩阵保留）
 
 ```r
 library(ICellbioRpy)
 
-# Convert directly from zip file to h5ad format
-# This preserves sparse matrix format and is highly memory efficient
-# Typically achieves 70-90% reduction in file size compared to dense storage
+# 直接从 zip 文件转换为 h5ad 格式
+# 这会保留稀疏矩阵格式，并且内存效率高
+# 通常比密集存储减少 70-90% 的文件大小
 iCellbio2H5ad("path/to/1cellbio_results.zip", "output.h5ad")
 ```
 
-### Method 3: Convert h5ad files to R objects (Reverse conversion)
+### 方法 3：将 h5ad 文件转换为 R 对象（反向转换）
 
 ```r
 library(ICellbioRpy)
 
-# Convert h5ad file to SingleCellExperiment
+# 将 h5ad 文件转换为 SingleCellExperiment
 sce <- h5ad_to_sce("data.h5ad")
 
-# Convert h5ad file to Seurat object
+# 将 h5ad 文件转换为 Seurat 对象
 seurat_obj <- h5ad_to_seurat("data.h5ad")
 
-# Specify which matrix to use as main expression data
-# Use X matrix as counts instead of logcounts
+# 指定哪个矩阵用作主要表达数据
+# 使用 X 矩阵作为 counts 而不是 logcounts
 sce <- h5ad_to_sce("data.h5ad", use_x_as = "counts")
 seurat_obj <- h5ad_to_seurat("data.h5ad", use_x_as = "counts")
 ```
 
-### Method 4: Convert Seurat objects to h5ad files
+### 方法 4：将 Seurat 对象转换为 h5ad 文件
 
 ```r
 library(ICellbioRpy)
 
-# Convert Seurat object to h5ad file
+# 将 Seurat 对象转换为 h5ad 文件
 seurat_to_h5ad(seurat_obj, "output.h5ad")
 
-# Use counts instead of data layer
+# 使用 counts 而不是 data 层
 seurat_to_h5ad(seurat_obj, "output.h5ad", layer = "counts")
 
-# Specify different default assay (e.g., SCT)
+# 指定不同的默认 assay (例如, SCT)
 seurat_to_h5ad(seurat_obj, "output.h5ad", default_assay = "SCT")
 
-# Exclude dimensionality reductions if not needed
+# 如果不需要，排除降维结果
 seurat_to_h5ad(seurat_obj, "output.h5ad", include_reductions = FALSE)
 ```
 
-## Functions
+-----
 
-### Core Conversion Functions
-- `read1Cellbio()` - Reads 1Cellbio results from a zip file and creates a 1CellbioData object
-- `as.SingleCellExperiment()` - Converts a 1CellbioData object to a SingleCellExperiment object
-- `as.Seurat()` - Converts a 1CellbioData object to a Seurat object
-- `iCellbio2H5ad()` - **NEW**: Directly converts a zip file to h5ad format without creating intermediate objects. **Preserves sparse matrix format** for optimal memory efficiency and storage (typically 70-90% file size reduction)
-- `h5ad_to_sce()` - **NEW**: Converts h5ad files to SingleCellExperiment objects with sparse matrix preservation
-- `h5ad_to_seurat()` - **NEW**: Converts h5ad files to Seurat objects with sparse matrix preservation
-- `seurat_to_h5ad()` - **NEW**: Converts Seurat objects to h5ad files with sparse matrix preservation and metadata retention
+## 函数
 
-### Python Environment Configuration
-- `configure_python_env()` - **NEW**: Configures Python environment and prevents automatic anndata installation
-- `check_anndata_available()` - **NEW**: Checks if anndata is available in the current Python environment
+### 核心转换函数
 
-## Details
+  - `read1Cellbio()` - 从 zip 文件读取 1Cellbio 结果并创建 1CellbioData 对象
+  - `as.SingleCellExperiment()` - 将 1CellbioData 对象转换为 SingleCellExperiment 对象
+  - `as.Seurat()` - 将 1CellbioData 对象转换为 Seurat 对象
+  - `iCellbio2H5ad()` - **新增**：直接将 zip 文件转换为 h5ad 格式，无需创建中间对象。**保留稀疏矩阵格式**，以实现最佳内存效率和存储（通常减少 70-90% 的文件大小）
+  - `h5ad_to_sce()` - **新增**：将 h5ad 文件转换为 SingleCellExperiment 对象，并保留稀疏矩阵
+  - `h5ad_to_seurat()` - **新增**：将 h5ad 文件转换为 Seurat 对象，并保留稀疏矩阵
+  - `seurat_to_h5ad()` - **新增**：将 Seurat 对象转换为 h5ad 文件，并保留稀疏矩阵和元数据
 
-The package works with the standard 1Cellbio results structure which includes:
+### Python 环境配置
 
-- Gene expression matrices (counts and logcounts)
-- Cell metadata
-- Gene metadata
-- Dimensionality reductions (PCA, tSNE, UMAP)
+  - `configure_python_env()` - **新增**：配置 Python 环境并防止自动安装 anndata
+  - `check_anndata_available()` - **新增**：检查当前 Python 环境中 anndata 是否可用
 
-### Data Structure
+-----
 
-The 1Cellbio results contain:
+## 详情
 
-1. **Count Data**: Raw count matrix stored as HDF5 sparse matrix
-2. **Logcounts Data**: Log-transformed normalized data stored as HDF5 dense matrix
-3. **Cell Metadata**: Per-cell information including tissue, cluster assignments, quality control metrics
-4. **Gene Metadata**: Per-gene information
-5. **Dimensionality Reductions**: PCA, tSNE, and UMAP embeddings
+该包适用于标准的 1Cellbio 结果结构，包括：
 
-### Supported Output Formats
+  - 基因表达矩阵（counts 和 logcounts）
+  - 细胞元数据
+  - 基因元数据
+  - 降维结果（PCA、tSNE、UMAP）
+
+### 数据结构
+
+1Cellbio 结果包含：
+
+1.  **计数数据**：以 HDF5 稀疏矩阵形式存储的原始计数矩阵
+2.  **Logcounts 数据**：以 HDF5 密集矩阵形式存储的对数转换归一化数据
+3.  **细胞元数据**：包括组织、聚类分配、质量控制指标等每个细胞的信息
+4.  **基因元数据**：每个基因的信息
+5.  **降维结果**：PCA、tSNE 和 UMAP 嵌入
+
+### 支持的输出格式
 
 #### SingleCellExperiment
 
-The SingleCellExperiment object contains:
+SingleCellExperiment 对象包含：
 
-- Assays: `counts` (sparse matrix) and `logcounts` (dense matrix)
-- ColData: Cell metadata
-- RowData: Gene metadata
-- ReducedDims: PCA, tSNE, and UMAP embeddings
+  - Assays：`counts`（稀疏矩阵）和 `logcounts`（密集矩阵）
+  - ColData：细胞元数据
+  - RowData：基因元数据
+  - ReducedDims：PCA、tSNE 和 UMAP 嵌入
 
 #### Seurat
 
-The Seurat object contains:
+Seurat 对象包含：
 
-- Assay: RNA assay with `counts` and `data` slots
-- MetaData: Cell metadata
-- Reductions: pca, tsne, and umap
+  - Assay：RNA assay，包含 `counts` 和 `data` 槽位
+  - MetaData：细胞元数据
+  - Reductions：pca、tsne 和 umap
 
-#### h5ad (for Scanpy)
+#### h5ad (用于 Scanpy)
 
-The h5ad file contains:
+h5ad 文件包含：
 
-- X: Raw count matrix (preserved as sparse matrix for memory efficiency)
-- layers: Log-transformed data in the 'logcounts' layer (preserved as sparse matrix)
-- obs: Cell metadata
-- var: Gene metadata
-- obsm: Dimensionality reductions (PCA, tSNE, UMAP)
+  - X：原始计数矩阵（保留为稀疏矩阵以提高内存效率）
+  - layers：'logcounts' 层中的对数转换数据（保留为稀疏矩阵）
+  - obs：细胞元数据
+  - var：基因元数据
+  - obsm：降维结果（PCA、tSNE、UMAP）
 
-**Note**: The `iCellbio2H5ad()` function automatically preserves sparse matrix format, resulting in significant storage savings (typically 70-90% reduction in file size compared to dense matrix storage).
+**注意**：`iCellbio2H5ad()` 函数会自动保留稀疏矩阵格式，从而显著节省存储空间（通常比密集矩阵存储减少 70-90% 的文件大小）。
 
-## Example Workflows
+-----
 
-### Standard Workflow (Two-step conversion)
+## 示例工作流程
+
+### 标准工作流程（两步转换）
 
 ```r
-# Load the package
+# 加载包
 library(ICellbioRpy)
 
-# Read the data
+# 读取数据
 data <- read1Cellbio("path/to/1cellbio_results.zip")
 
-# Convert to SingleCellExperiment for use with Bioconductor packages
+# 转换为 SingleCellExperiment，用于 Bioconductor 包
 sce <- as.SingleCellExperiment(data)
 
-# Or convert to Seurat object for use with Seurat functions
+# 或转换为 Seurat 对象，用于 Seurat 函数
 seurat <- as.Seurat(data)
 
-# Or convert to h5ad for use with Scanpy in Python
+# 或转换为 h5ad，用于 Python 中的 Scanpy
 as.h5ad(data, "results.h5ad")
 
-# Perform downstream analysis
-# With SingleCellExperiment:
+# 执行下游分析
+# 使用 SingleCellExperiment:
 library(scater)
 sce <- logNormCounts(sce)
 plotPCA(sce, colour_by = "level1class")
 
-# With Seurat:
+# 使用 Seurat:
 library(Seurat)
 DimPlot(seurat, reduction = "umap", group.by = "level1class")
 
-# With Scanpy (in Python):
+# 使用 Scanpy (在 Python 中):
 # import scanpy as sc
 # adata = sc.read_h5ad("results.h5ad")
 # sc.pl.umap(adata, color='level1class')
 ```
 
-### Memory-Efficient Workflow (Direct conversion with Sparse Matrix Preservation)
+### 内存高效工作流程（直接转换并保留稀疏矩阵）
 
 ```r
-# Load the package
+# 加载包
 library(ICellbioRpy)
 
-# For large datasets, convert directly to h5ad format
-# This preserves sparse matrix format and avoids creating intermediate R objects
-# Achieves significant memory savings and storage efficiency
+# 对于大型数据集，直接转换为 h5ad 格式
+# 这会保留稀疏矩阵格式，并避免创建中间 R 对象
+# 实现显著的内存节省和存储效率
 iCellbio2H5ad("path/to/1cellbio_results.zip", "results.h5ad")
 
-# Optional: specify custom temporary directory and keep temp files for debugging
+# 可选：指定自定义临时目录并保留临时文件以进行调试
 iCellbio2H5ad("path/to/1cellbio_results.zip", "results.h5ad", 
             temp_dir = "/custom/temp/dir", cleanup = FALSE)
 
-# The resulting h5ad file will be much smaller (70-90% reduction) compared to dense storage
-# Example: A dataset that would be ~470 MB as dense matrices becomes ~99 MB as sparse
+# 生成的 h5ad 文件将比密集存储小得多（减少 70-90%）
+# 示例：一个作为密集矩阵约 470 MB 的数据集，作为稀疏矩阵变为约 99 MB
 
-# Then use the h5ad file in Python with Scanpy:
+# 然后在 Python 中使用 Scanpy 处理 h5ad 文件：
 # import scanpy as sc
 # adata = sc.read_h5ad("results.h5ad")
 # print(f"Matrix sparsity: {(1 - adata.X.nnz / (adata.shape[0] * adata.shape[1])) * 100:.1f}%")
 # sc.pl.umap(adata, color='level1class')
 ```
 
-## Technical Implementation
+-----
 
-The package handles HDF5 file reading with the `hdf5r` package and properly manages:
+## 技术实现
 
-- Sparse matrix conversion from 10x format
-- Proper dimension handling for all data types
-- Metadata parsing from HDF5 datasets
-- Automatic handling of zip file extraction
-- Conversion to h5ad format using the `anndata` package
-- Memory-efficient direct conversion for large datasets
+该包使用 `hdf5r` 包处理 HDF5 文件读取，并正确管理：
 
-## Requirements
+  - 从 10x 格式转换稀疏矩阵
+  - 正确处理所有数据类型的维度
+  - 从 HDF5 数据集解析元数据
+  - 自动处理 zip 文件解压
+  - 使用 `anndata` 包转换为 h5ad 格式
+  - 针对大型数据集的内存高效直接转换
 
-- R >= 4.0
-- Bioconductor packages: SingleCellExperiment
-- CRAN packages: Seurat, hdf5r, jsonlite, Matrix, anndata, reticulate (>= 1.39.0)
+-----
 
-## License
+## 要求
+
+  - R \>= 4.0
+  - Bioconductor 包：SingleCellExperiment
+  - CRAN 包：Seurat, hdf5r, jsonlite, Matrix, anndata, reticulate (\>= 1.39.0)
+
+-----
+
+## 许可证
 
 MIT

@@ -1,4 +1,4 @@
-# 1CellbioRpy 快速开始指南
+# ICellbioRpy 快速开始指南
 
 ## 📦 安装
 
@@ -6,16 +6,16 @@
 # 安装devtools（如果尚未安装）
 install.packages("devtools")
 
-# 从GitHub安装1CellbioRpy
-devtools::install_github("your_username/1CellbioRpy")
+# 从GitHub安装ICellbioRpy
+devtools::install_github("1-Cellbio/ICellbioRpy")
 
 # 加载包
-library(1CellbioRpy)
+library(ICellbioRpy)
 ```
 
 ## 🚀 核心功能概览
 
-1CellbioRpy提供完整的单细胞数据格式转换生态系统：
+ICellbioRpy提供完整的单细胞数据格式转换生态系统：
 
 - **读取1Cellbio结果** → `read1Cellbio()`
 - **转换为h5ad格式** → `iCellbio2H5ad()`
@@ -29,7 +29,7 @@ library(1CellbioRpy)
 
 ```r
 # 包会自动检测并配置Python环境
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # 验证配置是否成功
 check_anndata_available()
@@ -55,7 +55,7 @@ configure_python_env(verbose = TRUE)
 ```r
 # 方法1：在R会话开始时设置
 Sys.setenv(RETICULATE_AUTOCONFIGURE = "FALSE")
-library(1CellbioRpy)
+library(ICellbioRpy)
 configure_python_env(conda_env = "your_env")
 
 # 方法2：直接指定环境
@@ -292,7 +292,7 @@ if (!file.exists("data.zip")) {
 
 ```r
 # 推荐的分析流程
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # 1. 配置环境
 configure_python_env()
@@ -338,7 +338,7 @@ identical(original_dims, new_dims)
 
 ## 📚 更多资源
 
-- **详细文档**: `vignette("introduction", package = "1CellbioRpy")`
+- **详细文档**: `vignette("introduction", package = "ICellbioRpy")`
 - **函数帮助**: `?iCellbio2H5ad`, `?h5ad_to_sce`
 - **安装指南**: `anndata_installation_guide.md`
 - **完整示例**: `README.md`
@@ -347,7 +347,7 @@ identical(original_dims, new_dims)
 
 ```r
 # 查看包信息
-packageVersion("1CellbioRpy")
+packageVersion("ICellbioRpy")
 
 # 查看会话信息
 sessionInfo()

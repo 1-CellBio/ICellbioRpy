@@ -1,4 +1,4 @@
-# 1CellbioRpy Quick Start Guide
+# ICellbioRpy Quick Start Guide
 
 ## 📦 Installation
 
@@ -6,16 +6,16 @@
 # Install devtools if not already installed
 install.packages("devtools")
 
-# Install 1CellbioRpy from GitHub
-devtools::install_github("your_username/1CellbioRpy")
+# Install ICellbioRpy from GitHub
+devtools::install_github("1-Cellbio/ICellbioRpy")
 
 # Load the package
-library(1CellbioRpy)
+library(ICellbioRpy)
 ```
 
 ## 🚀 Core Features Overview
 
-1CellbioRpy provides a complete single-cell data format conversion ecosystem:
+ICellbioRpy provides a complete single-cell data format conversion ecosystem:
 
 - **Read 1Cellbio Results** → `read1Cellbio()`
 - **Convert to h5ad Format** → `iCellbio2H5ad()`
@@ -29,7 +29,7 @@ library(1CellbioRpy)
 
 ```r
 # The package will automatically detect and configure Python environment
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # Verify configuration success
 check_anndata_available()
@@ -55,7 +55,7 @@ If you encounter anndata automatic installation prompts:
 ```r
 # Method 1: Set at the beginning of R session
 Sys.setenv(RETICULATE_AUTOCONFIGURE = "FALSE")
-library(1CellbioRpy)
+library(ICellbioRpy)
 configure_python_env(conda_env = "your_env")
 
 # Method 2: Directly specify environment
@@ -292,7 +292,7 @@ if (!file.exists("data.zip")) {
 
 ```r
 # Recommended analysis workflow
-library(1CellbioRpy)
+library(ICellbioRpy)
 
 # 1. Configure environment
 configure_python_env()
@@ -338,7 +338,7 @@ identical(original_dims, new_dims)
 
 ## 📚 Additional Resources
 
-- **Detailed Documentation**: `vignette("introduction", package = "1CellbioRpy")`
+- **Detailed Documentation**: `vignette("introduction", package = "ICellbioRpy")`
 - **Function Help**: `?iCellbio2H5ad`, `?h5ad_to_sce`
 - **Installation Guide**: `anndata_installation_guide.md`
 - **Complete Examples**: `README.md`
@@ -347,7 +347,7 @@ identical(original_dims, new_dims)
 
 ```r
 # Check package information
-packageVersion("1CellbioRpy")
+packageVersion("ICellbioRpy")
 
 # Check session information
 sessionInfo()
