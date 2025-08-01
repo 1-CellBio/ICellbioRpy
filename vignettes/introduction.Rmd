@@ -1,0 +1,342 @@
+---
+title: "Introduction to 1CellbioRpy"
+author: "1CellbioRpy Development Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to 1CellbioRpy}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+# 1CellbioRpy
+
+The 1CellbioRpy package provides comprehensive functions to work with 1Cellbio pipeline results. It enables seamless conversion between different single-cell data formats including:
+
+- Reading 1Cellbio zip files into R objects
+- Converting to SingleCellExperiment and Seurat objects
+- Converting to h5ad format for Python/Scanpy analysis
+- Bidirectional conversion between h5ad and R objects
+
+## Installation
+
+You can install the development version of 1CellbioRpy from GitHub:
+
+```{r}
+# Install devtools if you haven't already
+install.packages("devtools")
+
+# Install 1CellbioRpy from GitHub
+devtools::install_github("your_username/1CellbioRpy")
+```
+
+## Quick Start
+
+### Loading the package
+
+```{r}
+library(1CellbioRpy)
+```
+
+### Python Environment Configuration
+
+The package automatically configures Python environment for h5ad operations. You can also manually configure it:
+
+```{r}
+# Automatic configuration (recommended)
+configure_python_env()
+
+# Manual configuration with specific Python path
+configure_python_env(python_path = "/path/to/python")
+
+# Manual configuration with conda environment
+configure_python_env(conda_env = "scanpy")
+```
+
+## Core Functions
+
+### 1. Reading 1Cellbio Results
+
+The `read1Cellbio()` function reads zip files containing 1Cellbio results:
+
+```{r}
+# Read 1Cellbio results from a zip file
+data <- read1Cellbio("path/to/1cellbio_results.zip")
+
+# Check the class of the object
+class(data)
+#> [1] "1CellbioData"
+```
+
+### 2. Converting to h5ad Format
+
+The `iCellbio2H5ad()` function converts 1Cellbio zip files directly to h5ad format:
+
+```{r}
+# Convert 1Cellbio zip to h5ad format
+iCellbio2H5ad("1cellbio_results.zip", "output.h5ad")
+```
+
+### 3. Converting to SingleCellExperiment
+
+```{r}
+# Convert to SingleCellExperiment
+sce <- as.SingleCellExperiment(data)
+
+# Check the class and dimensions
+class(sce)
+#> [1] "SingleCellExperiment"
+
+# Access assays
+assayNames(sce)
+#> [1] "counts" "logcounts"
+
+# Access dimensionality reductions
+reducedDimNames(sce)
+#> [1] "PCA"  "TSNE" "UMAP"
+```
+
+### 4. Converting to Seurat Object
+
+```{r}
+# Convert to Seurat object
+seurat <- as.Seurat(data)
+
+# Check the class
+class(seurat)
+#> [1] "Seurat"
+
+# Access dimensionality reductions
+names(seurat@reductions)
+#> [1] "pca"  "tsne" "umap"
+```
+
+## Bidirectional h5ad Conversion
+
+### From h5ad to R Objects
+
+```{r}
+# Convert h5ad to SingleCellExperiment
+sce <- h5ad_to_sce("data.h5ad")
+
+# Convert h5ad to Seurat
+seurat <- h5ad_to_seurat("data.h5ad")
+```
+
+### From R Objects to h5ad
+
+```{r}
+# Convert Seurat object to h5ad
+seurat_to_h5ad(seurat_object, "output.h5ad")
+```
+
+## Data Access and Manipulation
+
+### Working with SingleCellExperiment
+
+```{r}
+# Access count data
+counts_matrix <- counts(sce)
+
+# Access log-normalized data
+logcounts_matrix <- logcounts(sce)
+
+# Access cell metadata
+cell_metadata <- colData(sce)
+
+# Access gene metadata
+gene_metadata <- rowData(sce)
+
+# Access dimensionality reductions
+pca_coords <- reducedDim(sce, "PCA")
+umap_coords <- reducedDim(sce, "UMAP")
+```
+
+### Working with Seurat Objects
+
+```{r}
+# Access count data
+counts_matrix <- GetAssayData(seurat, slot = "counts")
+
+# Access normalized data
+norm_data <- GetAssayData(seurat, slot = "data")
+
+# Access cell metadata
+cell_metadata <- seurat[[]]
+
+# Access dimensionality reductions
+pca_coords <- Embeddings(seurat, reduction = "pca")
+umap_coords <- Embeddings(seurat, reduction = "umap")
+```
+
+## Integration with Analysis Workflows
+
+### Using with Bioconductor
+
+```{r}
+library(scater)
+library(scran)
+
+# Quality control
+sce <- addPerCellQC(sce)
+sce <- addPerFeatureQC(sce)
+
+# Visualization
+plotPCA(sce, colour_by = "level1class")
+plotUMAP(sce, colour_by = "level1class")
+```
+
+### Using with Seurat
+
+```{r}
+library(Seurat)
+
+# Standard Seurat workflow
+seurat <- NormalizeData(seurat)
+seurat <- FindVariableFeatures(seurat)
+seurat <- ScaleData(seurat)
+
+# Visualization
+DimPlot(seurat, reduction = "umap", group.by = "level1class")
+FeaturePlot(seurat, features = c("gene1", "gene2"))
+```
+
+### Using with Python/Scanpy
+
+After converting to h5ad format, you can use the data in Python:
+
+```python
+import scanpy as sc
+import pandas as pd
+
+# Read the h5ad file
+adata = sc.read_h5ad("output.h5ad")
+
+# Basic information
+print(adata)
+
+# Visualization
+sc.pl.umap(adata, color='level1class')
+sc.pl.violin(adata, keys=['gene1', 'gene2'], groupby='level1class')
+
+# Further analysis
+sc.tl.rank_genes_groups(adata, 'level1class')
+sc.pl.rank_genes_groups(adata)
+```
+
+## Data Structure Details
+
+### Gene Expression Matrices
+
+The package preserves the sparse nature of count data for memory efficiency:
+
+```{r}
+# Count matrix is sparse
+class(counts(sce))
+#> [1] "dgCMatrix"
+
+# Check sparsity
+Matrix::nnzero(counts(sce)) / length(counts(sce))
+#> [1] 0.05  # 5% non-zero values
+```
+
+### Metadata Preservation
+
+All metadata from the original 1Cellbio analysis is preserved:
+
+```{r}
+# Cell-level metadata
+colnames(colData(sce))
+#> [1] "tissue" "group" "total.mRNA.mol" "well" "sex" "level1class" ...
+
+# Gene-level metadata
+colnames(rowData(sce))
+#> [1] "gene_id" "gene_symbol" ...
+```
+
+### Dimensionality Reductions
+
+All computed dimensionality reductions are available:
+
+```{r}
+# Check available reductions
+reducedDimNames(sce)
+#> [1] "PCA"  "TSNE" "UMAP"
+
+# Dimensions
+dim(reducedDim(sce, "PCA"))   # [1] n_cells 20
+dim(reducedDim(sce, "TSNE"))  # [1] n_cells 2
+dim(reducedDim(sce, "UMAP"))  # [1] n_cells 2
+```
+
+## Troubleshooting
+
+### Python Environment Issues
+
+If you encounter Python/anndata related errors:
+
+```{r}
+# Check if anndata is available
+check_anndata_available()
+
+# Reconfigure Python environment
+configure_python_env(verbose = TRUE)
+
+# Install anndata in current environment
+# (Run in terminal: pip install anndata)
+```
+
+### Memory Considerations
+
+For large datasets, consider:
+
+```{r}
+# Check object size
+object.size(sce)
+
+# Use sparse matrices when possible
+# (automatically handled by the package)
+
+# For very large datasets, consider working with h5ad files directly
+# and loading subsets as needed
+```
+
+## Advanced Features
+
+### Custom Python Configuration
+
+```{r}
+# Use specific conda environment
+configure_python_env(conda_env = "my_scanpy_env")
+
+# Use specific Python installation
+configure_python_env(python_path = "/usr/local/bin/python3.9")
+
+# Verbose output for debugging
+configure_python_env(verbose = TRUE)
+```
+
+### Batch Processing
+
+```{r}
+# Process multiple files
+zip_files <- list.files(pattern = "*.zip")
+for (zip_file in zip_files) {
+  output_name <- gsub(".zip", ".h5ad", zip_file)
+  iCellbio2H5ad(zip_file, output_name)
+}
+```
+
+## Session Information
+
+```{r}
+sessionInfo()
+```

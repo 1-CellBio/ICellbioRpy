@@ -1,0 +1,36 @@
+# R specific
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Package build
+*.tar.gz
+*.zip
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Log files
+*.log
+
+# Test outputs
+test_*.h5ad
+test_*.zip
+final_test_*.h5ad
+
+# Development files
+dev/
+PACKAGE_CLEANUP_SUMMARY.md
+QUICK_START_OPTIMIZATION_SUMMARY.md
+WeChat_Article.md
