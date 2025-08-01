@@ -52,7 +52,7 @@ configure_python_env <- function(python_path = NULL, conda_env = NULL, verbose =
     if (verbose) {
       cat("Python configuration:\n")
       cat("  - Python:", py_config$python, "\n")
-      cat("  - Version:", py_config$version[[1]], "\n")
+      cat("  - Version:", py_config$version_string, "\n")
     }
     
     # Test anndata import
