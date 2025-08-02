@@ -89,7 +89,7 @@ iCellbio2H5ad("1cellbio_results.zip", "output.h5ad")
 
 ```{r}
 # Convert to SingleCellExperiment
-sce <- as.SingleCellExperiment(data)
+sce <- as.SingleCellExperiment.1CB(data)
 
 # Check the class and dimensions
 class(sce)
@@ -108,7 +108,7 @@ reducedDimNames(sce)
 
 ```{r}
 # Convert to Seurat object
-seurat <- as.Seurat(data)
+seurat <- as.Seurat.1CB(data)
 
 # Check the class
 class(seurat)

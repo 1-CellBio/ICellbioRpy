@@ -85,7 +85,7 @@ print(data)
 
 ```r
 # Convert to SCE object
-sce <- as.SingleCellExperiment(data)
+sce <- as.SingleCellExperiment.1CB(data)
 
 # View data
 sce
@@ -105,7 +105,7 @@ pca_coords <- reducedDim(sce, "PCA")
 
 ```r
 # Convert to Seurat object
-seurat <- as.Seurat(data)
+seurat <- as.Seurat.1CB(data)
 
 # View data
 seurat
@@ -302,10 +302,10 @@ data <- read1Cellbio("results.zip")
 
 # 3. Choose format based on needs
 if (use_bioconductor) {
-  sce <- as.SingleCellExperiment(data)
+  sce <- as.SingleCellExperiment.1CB(data)
   # Bioconductor analysis...
 } else if (use_seurat) {
-  seurat <- as.Seurat(data)
+  seurat <- as.Seurat.1CB(data)
   # Seurat analysis...
 } else if (use_python) {
   iCellbio2H5ad("results.zip", "analysis.h5ad")

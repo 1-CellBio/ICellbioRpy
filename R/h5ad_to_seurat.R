@@ -6,8 +6,7 @@
 #'
 #' @param h5ad_file Path to the h5ad file
 #' @param use_x_as Character string specifying which data to use as the main expression matrix.
-#'   Options: "logcounts" (default) or "counts". If "logcounts", X matrix becomes logcounts
-#'   and counts layer becomes counts. If "counts", X matrix becomes counts.
+#'   Options: "logcounts" (default), "counts", or "auto". If "auto", automatically detect based on data.
 #' @param verbose Logical, whether to print progress messages (default: TRUE)
 #'
 #' @return A Seurat object with:
@@ -28,7 +27,7 @@
 #'
 #' @export
 #' @importFrom Seurat as.Seurat
-h5ad_to_seurat <- function(h5ad_file, use_x_as = "logcounts", verbose = TRUE) {
+h5ad_to_seurat <- function(h5ad_file, use_x_as = "auto", verbose = TRUE) {
   
   # Check if required packages are available
   if (!requireNamespace("Seurat", quietly = TRUE)) {

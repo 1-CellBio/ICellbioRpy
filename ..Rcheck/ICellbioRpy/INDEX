@@ -1,0 +1,19 @@
+as.Seurat               Convert 1CellbioData to Seurat object
+as.Seurat.1CellbioData
+                        Convert 1CellbioData to Seurat object
+as.SingleCellExperiment
+                        Convert 1CellbioData to SingleCellExperiment
+                        object
+as.SingleCellExperiment.1CellbioData
+                        Convert 1CellbioData to SingleCellExperiment
+                        object
+check_anndata_available
+                        Check if Python environment is properly
+                        configured for anndata
+configure_python_env    Configure Python Environment for anndata
+h5ad_to_sce             Convert h5ad file to SingleCellExperiment
+                        object
+h5ad_to_seurat          Convert h5ad file to Seurat object
+iCellbio2H5ad           Convert 1Cellbio zip file to h5ad format
+read1Cellbio            Read 1Cellbio results from zip file
+seurat_to_h5ad          Convert Seurat object to h5ad file

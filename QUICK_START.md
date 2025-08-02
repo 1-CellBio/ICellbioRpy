@@ -85,7 +85,7 @@ print(data)
 
 ```r
 # 转换为SCE对象
-sce <- as.SingleCellExperiment(data)
+sce <- as.SingleCellExperiment.1CB(data)
 
 # 查看数据
 sce
@@ -105,7 +105,7 @@ pca_coords <- reducedDim(sce, "PCA")
 
 ```r
 # 转换为Seurat对象
-seurat <- as.Seurat(data)
+seurat <- as.Seurat.1CB(data)
 
 # 查看数据
 seurat
@@ -290,7 +290,7 @@ if (!file.exists("data.zip")) {
 
 ### 1. 工作流程建议
 
-```r
+```
 # 推荐的分析流程
 library(ICellbioRpy)
 
@@ -302,10 +302,10 @@ data <- read1Cellbio("results.zip")
 
 # 3. 根据需要选择格式
 if (use_bioconductor) {
-  sce <- as.SingleCellExperiment(data)
+  sce <- as.SingleCellExperiment.1CB(data)
   # Bioconductor分析...
 } else if (use_seurat) {
-  seurat <- as.Seurat(data)
+  seurat <- as.Seurat.1CB(data)
   # Seurat分析...
 } else if (use_python) {
   iCellbio2H5ad("results.zip", "analysis.h5ad")

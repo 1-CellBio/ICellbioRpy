@@ -9,8 +9,8 @@
 #' @examples
 #' \dontrun{
 #' data <- read1Cellbio("path/to/results.zip")
-#' sce <- as.SingleCellExperiment(data)
-#' seurat <- as.Seurat(data)
+#' sce <- as.SingleCellExperiment.1CB(data)
+#' seurat <- as.Seurat.1CB(data)
 #' }
 read1Cellbio <- function(file_path) {
   # Check if file exists
@@ -309,8 +309,18 @@ as.SingleCellExperiment.1CellbioData <- function(object, ...) {
 #' @param ... Additional arguments (not used)
 #' @return A Seurat object
 #' @export
-as.Seurat <- function(object, ...) {
-  UseMethod("as.Seurat")
+as.Seurat.1CB <- function(object, ...) {
+  UseMethod("as.Seurat.1CB")
+}
+
+#' S3 method for converting 1CellbioData to Seurat object
+#'
+#' @param object A 1CellbioData object
+#' @param ... Additional arguments (not used)
+#' @return A Seurat object
+#' @export
+as.Seurat.1CB.1CellbioData <- function(object, ...) {
+  as.Seurat.1CellbioData(object, ...)
 }
 
 #' Convert 1CellbioData to SingleCellExperiment object
@@ -319,6 +329,17 @@ as.Seurat <- function(object, ...) {
 #' @param ... Additional arguments (not used)
 #' @return A SingleCellExperiment object
 #' @export
-as.SingleCellExperiment <- function(object, ...) {
-  UseMethod("as.SingleCellExperiment")
+as.SingleCellExperiment.1CB <- function(object, ...) {
+  UseMethod("as.SingleCellExperiment.1CB")
 }
+
+#' S3 method for converting 1CellbioData to SingleCellExperiment object
+#'
+#' @param object A 1CellbioData object
+#' @param ... Additional arguments (not used)
+#' @return A SingleCellExperiment object
+#' @export
+as.SingleCellExperiment.1CB.1CellbioData <- function(object, ...) {
+  as.SingleCellExperiment.1CellbioData(object, ...)
+}
+

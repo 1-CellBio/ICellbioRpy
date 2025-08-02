@@ -64,10 +64,10 @@ library(ICellbioRpy)
 data <- read1Cellbio("path/to/1cellbio_results.zip")
 
 # Convert to SingleCellExperiment
-sce <- as.SingleCellExperiment(data)
+sce <- as.SingleCellExperiment.1CB(data)
 
 # Convert to Seurat object
-seurat <- as.Seurat(data)
+seurat <- as.Seurat.1CB(data)
 
 # Convert to h5ad format for Scanpy
 as.h5ad(data, "output.h5ad")
@@ -196,10 +196,10 @@ library(ICellbioRpy)
 data <- read1Cellbio("path/to/1cellbio_results.zip")
 
 # Convert to SingleCellExperiment for use with Bioconductor packages
-sce <- as.SingleCellExperiment(data)
+sce <- as.SingleCellExperiment.1CB(data)
 
 # Or convert to Seurat object for use with Seurat functions
-seurat <- as.Seurat(data)
+seurat <- as.Seurat.1CB(data)
 
 # Or convert to h5ad for use with Scanpy in Python
 as.h5ad(data, "results.h5ad")

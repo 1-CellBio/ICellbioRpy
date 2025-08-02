@@ -73,10 +73,10 @@ library(ICellbioRpy)
 data <- read1Cellbio("path/to/1cellbio_results.zip")
 
 # 转换为 SingleCellExperiment
-sce <- as.SingleCellExperiment(data)
+sce <- as.SingleCellExperiment.1CB(data)
 
 # 转换为 Seurat 对象
-seurat <- as.Seurat(data)
+seurat <- as.Seurat.1CB(data)
 
 # 转换为 h5ad 格式，用于 Scanpy
 as.h5ad(data, "output.h5ad")
@@ -213,10 +213,10 @@ library(ICellbioRpy)
 data <- read1Cellbio("path/to/1cellbio_results.zip")
 
 # 转换为 SingleCellExperiment，用于 Bioconductor 包
-sce <- as.SingleCellExperiment(data)
+sce <- as.SingleCellExperiment.1CB(data)
 
 # 或转换为 Seurat 对象，用于 Seurat 函数
-seurat <- as.Seurat(data)
+seurat <- as.Seurat.1CB(data)
 
 # 或转换为 h5ad，用于 Python 中的 Scanpy
 as.h5ad(data, "results.h5ad")

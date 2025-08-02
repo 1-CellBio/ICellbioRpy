@@ -30,7 +30,7 @@
 #' @importFrom SingleCellExperiment SingleCellExperiment
 #' @importFrom S4Vectors DataFrame
 #' @importFrom Matrix t
-h5ad_to_sce <- function(h5ad_file, use_x_as = "logcounts", verbose = TRUE) {
+h5ad_to_sce <- function(h5ad_file, use_x_as = "auto", verbose = TRUE) {
   
   # Check if required packages are available
   if (!requireNamespace("anndata", quietly = TRUE)) {
@@ -70,6 +70,57 @@ h5ad_to_sce <- function(h5ad_file, use_x_as = "logcounts", verbose = TRUE) {
     cat("Dataset dimensions:", adata$n_obs, "cells x", adata$n_vars, "genes\n")
   }
   
+  # Check if use_x_as is set to auto, then determine based on data characteristics
+  if (use_x_as == "auto") {
+    # Check if X matrix values are integers (typical for counts)
+    X_data <- adata$X
+    if (inherits(X_data, "sparseMatrix") || inherits(X_data, "dgCMatrix")) {
+      # For sparse matrices, randomly sample values to determine if they are integers
+      x_vals <- X_data@x
+      if (length(x_vals) > 0) {
+        # Randomly sample up to 1000 values to determine if they are integers
+        sample_size <- min(1000, length(x_vals))
+        if (sample_size < length(x_vals)) {
+          sampled_indices <- sample(length(x_vals), sample_size)
+          sampled_vals <- x_vals[sampled_indices]
+        } else {
+          sampled_vals <- x_vals
+        }
+        
+        are_integers <- all(sampled_vals == floor(sampled_vals))
+        if (are_integers) {
+          use_x_as <- "counts"
+          if (verbose) cat("Detected X matrix as counts (integer values)\n")
+        } else {
+          use_x_as <- "logcounts"
+          if (verbose) cat("Detected X matrix as logcounts (non-integer values)\n")
+        }
+      } else {
+        # All values are zero, default to counts
+        use_x_as <- "counts"
+        if (verbose) cat("Detected X matrix as counts (all zero values)\n")
+      }
+    } else {
+      # For dense matrices, check a sample of values
+      x_vals <- X_data[1:min(1000, length(X_data))]  # Check first 1000 values or all if fewer
+      x_vals <- x_vals[x_vals != 0]  # Remove zeros
+      if (length(x_vals) > 0) {
+        are_integers <- all(x_vals == floor(x_vals))
+        if (are_integers) {
+          use_x_as <- "counts"
+          if (verbose) cat("Detected X matrix as counts (integer values)\n")
+        } else {
+          use_x_as <- "logcounts"
+          if (verbose) cat("Detected X matrix as logcounts (non-integer values)\n")
+        }
+      } else {
+        # All values are zero, default to counts
+        use_x_as <- "counts"
+        if (verbose) cat("Detected X matrix as counts (all zero values)\n")
+      }
+    }
+  }
+  
   # Prepare assays
   assays_list <- list()
   
@@ -98,7 +149,7 @@ h5ad_to_sce <- function(h5ad_file, use_x_as = "logcounts", verbose = TRUE) {
     }
     
   } else {
-    stop("use_x_as must be either 'logcounts' or 'counts'")
+    stop("use_x_as must be either 'logcounts', 'counts', or 'auto'")
   }
   
   # Prepare cell metadata (colData)
