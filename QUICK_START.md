@@ -355,6 +355,58 @@ sessionInfo()
 # 报告问题时请包含上述信息
 ```
 
+## 6. 读取和整合10X MTX格式数据 🧬
+
+`read_10x_mtx_to_h5ad()` 函数可以直接读取多个10X Cell Ranger输出的MTX格式数据，进行基础QC过滤，并整合为h5ad文件：
+
+### 特性
+- ✅ 支持压缩(.gz)和非压缩的MTX文件
+- ✅ 使用data.table快速读取，依赖少
+- ✅ 自动细胞ID重命名避免重复
+- ✅ 简单QC过滤（可设置最小counts阈值）
+- ✅ 直接输出h5ad格式
+
+### 使用方法
+
+```r
+# 1. 准备样本信息CSV文件
+sample_info <- data.frame(
+  Sample_id = c("sample1", "sample2"),
+  mtx_fns = c(
+    "/path/to/sample1/matrix.mtx.gz",
+    "/path/to/sample2/matrix.mtx.gz"
+  ),
+  features_fns = c(
+    "/path/to/sample1/features.tsv.gz",
+    "/path/to/sample2/features.tsv.gz"
+  ),
+  barcodes_fns = c(
+    "/path/to/sample1/barcodes.tsv.gz",
+    "/path/to/sample2/barcodes.tsv.gz"
+  )
+)
+write.csv(sample_info, "samples.csv", row.names = FALSE)
+
+# 2. 读取和整合数据
+read_10x_mtx_to_h5ad(
+  csv_file = "samples.csv",
+  output_h5ad = "integrated_data.h5ad",
+  min_counts_per_cell = 200,  # QC过滤阈值
+  verbose = TRUE
+)
+```
+
+### CSV文件格式要求
+- `Sample_id`: 样本标识符
+- `mtx_fns`: matrix.mtx文件路径
+- `features_fns`: features.tsv或genes.tsv文件路径  
+- `barcodes_fns`: barcodes.tsv文件路径
+
+### 输出
+- 细胞ID格式: `{Sample_id}_{原始barcode}`
+- 矩阵格式: 基因 × 细胞 (输出时转换为细胞 × 基因)
+- 自动过滤低质量细胞(总counts < 阈值)
+
 ---
 
 **提示**: 如果您是第一次使用，建议先阅读 `vignette("introduction")` 获取完整的使用指南。

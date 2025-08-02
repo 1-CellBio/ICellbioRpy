@@ -31,7 +31,7 @@ Type 'q()' to quit R.
 > flush(stderr()); flush(stdout())
 > 
 > ### Name: configure_python_env
-> ### Title: Configure Python Environment for anndata
+> ### Title: Configure Python environment for anndata
 > ### Aliases: configure_python_env
 > 
 > ### ** Examples
@@ -45,28 +45,6 @@ Type 'q()' to quit R.
 > ##D 
 > ##D # Use specific Python path
 > ##D configure_python_env(python_path = "/usr/local/bin/python3")
-> ## End(Not run)
-> 
-> 
-> 
-> cleanEx()
-> nameEx("h5ad_to_Seurat")
-> ### * h5ad_to_Seurat
-> 
-> flush(stderr()); flush(stdout())
-> 
-> ### Name: h5ad_to_seurat
-> ### Title: Convert h5ad file to Seurat object
-> ### Aliases: h5ad_to_seurat
-> 
-> ### ** Examples
-> 
-> ## Not run: 
-> ##D # Convert h5ad to Seurat
-> ##D seurat_obj <- h5ad_to_seurat("data.h5ad")
-> ##D 
-> ##D # Use X matrix as counts instead of logcounts
-> ##D seurat_obj <- h5ad_to_seurat("data.h5ad", use_x_as = "counts")
 > ## End(Not run)
 > 
 > 
@@ -102,18 +80,18 @@ Type 'q()' to quit R.
 > flush(stderr()); flush(stdout())
 > 
 > ### Name: iCellbio2H5ad
-> ### Title: Convert 1Cellbio zip file to h5ad format
+> ### Title: Convert 1Cellbio results zip file directly to h5ad format
 > ### Aliases: iCellbio2H5ad
 > 
 > ### ** Examples
 > 
 > ## Not run: 
-> ##D # Basic usage
+> ##D # Basic usage - preserves sparse matrix format automatically
 > ##D iCellbio2H5ad("path/to/1Cellbio_results.zip", "output.h5ad")
 > ##D 
 > ##D # With custom temporary directory
-> ##D iCellbio2H5ad("path/to/1Cellbio_results.zip", "output.h5ad",
-> ##D               temp_dir = "/custom/temp")
+> ##D iCellbio2H5ad("path/to/1Cellbio_results.zip", "output.h5ad", 
+> ##D               temp_dir = "/custom/temp/dir")
 > ## End(Not run)
 > 
 > 
@@ -132,9 +110,38 @@ Type 'q()' to quit R.
 > 
 > ## Not run: 
 > ##D data <- read1Cellbio("path/to/results.zip")
-> ##D sce <- as.SingleCellExperiment(data)
-> ##D seurat <- as.Seurat(data)
+> ##D sce <- as.SingleCellExperiment.1CB(data)
+> ##D seurat <- as.Seurat.1CB(data)
 > ## End(Not run)
+> 
+> 
+> 
+> cleanEx()
+> nameEx("read_10x_mtx_to_h5ad")
+> ### * read_10x_mtx_to_h5ad
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: read_10x_mtx_to_h5ad
+> ### Title: Read and integrate 10X MTX format single-cell data
+> ### Aliases: read_10x_mtx_to_h5ad
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Create a CSV file with sample information
+> ##D sample_info <- data.frame(
+> ##D   Sample_id = c("sample1", "sample2"),
+> ##D   mtx_fns = c("/path/to/sample1/matrix.mtx.gz", "/path/to/sample2/matrix.mtx"),
+> ##D   features_fns = c("/path/to/sample1/features.tsv.gz", "/path/to/sample2/genes.tsv"),
+> ##D   barcodes_fns = c("/path/to/sample1/barcodes.tsv.gz", "/path/to/sample2/barcodes.tsv")
+> ##D )
+> ##D write.csv(sample_info, "samples.csv", row.names = FALSE)
+> ##D 
+> ##D # Read and integrate the data
+> ##D read_10x_mtx_to_h5ad("samples.csv", "integrated_data.h5ad")
+> ## End(Not run)
+> 
 > 
 > 
 > 
@@ -168,7 +175,7 @@ Type 'q()' to quit R.
 > cleanEx()
 > options(digits = 7L)
 > base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  4.711 0.281 5.008 0 0 
+Time elapsed:  4.749 0.261 5.027 0 0 
 > grDevices::dev.off()
 null device 
           1 

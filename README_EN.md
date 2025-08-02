@@ -1,267 +1,318 @@
-# ICellbioRpy
+# ICellbioRpy 📊🧬
 
-An R package for reading 1Cellbio pipeline results directly from zip files and converting them to Seurat, SingleCellExperiment objects, or h5ad format.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![R-CMD-check](https://github.com/1-Cellbio/ICellbioRpy/workflows/R-CMD-check/badge.svg)](https://github.com/1-Cellbio/ICellbioRpy/actions)
 
-## Overview
+> **One-Stop Single-Cell Data Format Conversion Solution**  
+> Seamless conversion between 1CellBio, Seurat, SingleCellExperiment, 10X MTX and H5AD formats
 
-This package provides functions to directly read compressed 1Cellbio single-cell RNA-seq analysis results and convert them to commonly used Bioconductor/Seurat objects or h5ad format for downstream analysis.
+## 🎯 Overview
 
-## Installation
+ICellbioRpy is a professional R package for single-cell RNA-seq data format conversion. It provides a complete toolkit for seamless conversion from 1CellBio analysis results to mainstream single-cell analysis formats, with optimized user experience especially for beginners.
+
+### ✨ Key Features
+
+- 🚀 **One-Click Conversion**: 1CellBio ZIP → H5AD/Seurat/SingleCellExperiment
+- 📊 **Multi-Sample Integration**: Integrate multiple 10X MTX files into single H5AD
+- 💾 **Memory Efficient**: Automatically preserves sparse matrix format, saving 70-90% storage
+- 🔄 **Bidirectional Conversion**: R objects ↔ Python formats
+- 🎨 **Beginner-Friendly**: Super detailed environment setup tutorials
+- 🐍 **Smart Python Configuration**: Automatic Python environment detection and configuration
+
+---
+
+## 🚀 Quick Start
+
+### 📋 Environment Setup (Must Read for Beginners)
+
+**If you are a complete beginner, please complete the environment setup first:**
+
+| OS | Installation Tutorial | Description |
+|----|--------------------|-------------|
+| **Windows** | [📘 Windows Setup Guide](tutorials/tutorial_0_environment_setup_windows.html) | Complete guide from R to conda environment |
+| **macOS** | [📘 macOS Setup Guide](tutorials/tutorial_0_environment_setup_macos.html) | Optimized for Apple Silicon |
+
+### ⚡ Environment Check
 
 ```r
-# Install devtools if you haven't already
-install.packages("devtools")
+# Quick environment check
+source("tutorials/check_environment.R")
+```
+
+### 📦 Installation
+
+```r
+# Install dependencies
+install.packages(c("devtools", "reticulate", "Matrix", "data.table"))
 
 # Install ICellbioRpy from GitHub
 devtools::install_github("1-Cellbio/ICellbioRpy")
 ```
 
-## Python Environment Configuration
+---
 
-**Important**: all functions that require Python/anndata automatically configure the Python environment using your current environment!
+## 📚 Complete Tutorials
 
-### Automatic Configuration
+We provide detailed beginner-friendly tutorials that can be run directly in RStudio:
 
-All h5ad-related functions now automatically use your current Python environment:
+### 🔧 Environment Setup Tutorials
+- [📘 Windows Setup](tutorials/tutorial_0_environment_setup_windows.html) - Complete Windows configuration guide
+- [📘 macOS Setup](tutorials/tutorial_0_environment_setup_macos.html) - Complete macOS configuration guide
+
+### 📊 Data Conversion Tutorials
+
+| Tutorial | Input | Output | Difficulty | Duration |
+|----------|-------|--------|------------|----------|
+| [Tutorial 1](tutorials/tutorial_1_1cellbio_to_h5ad.html) | 1CellBio ZIP | H5AD | ⭐⭐ | 30-45min |
+| [Tutorial 2](tutorials/tutorial_2_1cellbio_to_seurat.html) | 1CellBio ZIP | Seurat | ⭐⭐ | 45-60min |
+| [Tutorial 3](tutorials/tutorial_3_seurat_to_h5ad.html) | Seurat Object | H5AD | ⭐⭐⭐ | 40-50min |
+| [Tutorial 4](tutorials/tutorial_4_10x_mtx_to_h5ad.html) | 10X MTX Files | H5AD | ⭐⭐⭐⭐ | 50-70min |
+
+### 📖 Additional Resources
+- [📍 Start Here](tutorials/START_HERE.md) - Begin your learning journey here
+- [⚡ Quick Guide](tutorials/QUICK_GUIDE.md) - Code snippets and quick reference
+- [📚 Tutorial Overview](tutorials/README.md) - Complete tutorial list and descriptions
+
+---
+
+## 💻 Core Functions
+
+### 🔄 Python Environment Configuration
+
+**Important**: All H5AD-related functions require Python environment support. ICellbioRpy provides smart configuration:
 
 ```r
 library(ICellbioRpy)
 
-# These functions automatically configure Python environment using current environment
-iCellbio2H5ad("data.zip", "output.h5ad")  # Auto-configures Python
-sce <- h5ad_to_sce("data.h5ad")             # Auto-configures Python  
-seurat_obj <- h5ad_to_seurat("data.h5ad")   # Auto-configures Python
-seurat_to_h5ad(seurat_obj, "output.h5ad")   # Auto-configures Python
-```
+# Method 1: Auto-detect and use current environment (recommended)
+configure_python_env(verbose = TRUE)
 
-### Manual Configuration (When Needed)
+# Method 2: Specify conda environment
+configure_python_env(conda_env = "1cellbio", verbose = TRUE)
 
-If anndata is not available in your current environment, you can specify a different one:
+# Method 3: Specify Python path
+configure_python_env(python_path = "/path/to/python", verbose = TRUE)
 
-```r
-# Configure to use a specific conda environment
-configure_python_env(conda_env = "your_env_name")
-
-# Or configure to use a specific Python path  
-configure_python_env(python_path = "/path/to/python")
-
-# Verify anndata is available
+# Verify configuration
 check_anndata_available()
 ```
 
-**Note**: If anndata is not found, the functions will provide helpful error messages with installation instructions.
+### 📈 Main Use Cases
 
-For detailed troubleshooting, see `anndata_installation_guide.md`.
-
-## Usage
-
-### Method 1: Two-step conversion (via 1CellbioData object)
+#### 1. 1CellBio → H5AD (for Python analysis)
 
 ```r
-library(ICellbioRpy)
+# Direct conversion (recommended)
+iCellbio2H5ad("path/to/1cellbio_results.zip", "output.h5ad")
 
-# Read 1Cellbio results from zip file
+# Or two-step conversion
 data <- read1Cellbio("path/to/1cellbio_results.zip")
-
-# Convert to SingleCellExperiment
-sce <- as.SingleCellExperiment.1CB(data)
-
-# Convert to Seurat object
-seurat <- as.Seurat.1CB(data)
-
-# Convert to h5ad format for Scanpy
 as.h5ad(data, "output.h5ad")
 ```
 
-### Method 2: Direct conversion to h5ad (Memory Efficient + Sparse Matrix Preservation)
+#### 2. 1CellBio → Seurat (for R analysis)
 
 ```r
-library(ICellbioRpy)
+# Read and convert
+data <- read1Cellbio("path/to/1cellbio_results.zip")
+seurat_obj <- as.Seurat.1CB(data)
 
-# Convert directly from zip file to h5ad format
-# This preserves sparse matrix format and is highly memory efficient
-# Typically achieves 70-90% reduction in file size compared to dense storage
-iCellbio2H5ad("path/to/1cellbio_results.zip", "output.h5ad")
+# Visualization
+library(Seurat)
+DimPlot(seurat_obj, reduction = "umap", group.by = "level1class")
 ```
 
-### Method 3: Convert h5ad files to R objects (Reverse conversion)
+#### 3. Seurat → H5AD (cross-language conversion)
 
 ```r
-library(ICellbioRpy)
-
-# Convert h5ad file to SingleCellExperiment
-sce <- h5ad_to_sce("data.h5ad")
-
-# Convert h5ad file to Seurat object
-seurat_obj <- h5ad_to_seurat("data.h5ad")
-
-# Specify which matrix to use as main expression data
-# Use X matrix as counts instead of logcounts
-sce <- h5ad_to_sce("data.h5ad", use_x_as = "counts")
-seurat_obj <- h5ad_to_seurat("data.h5ad", use_x_as = "counts")
-```
-
-### Method 4: Convert Seurat objects to h5ad files
-
-```r
-library(ICellbioRpy)
-
-# Convert Seurat object to h5ad file
+# Convert R Seurat object to Python-compatible H5AD format
 seurat_to_h5ad(seurat_obj, "output.h5ad")
 
-# Use counts instead of data layer
-seurat_to_h5ad(seurat_obj, "output.h5ad", layer = "counts")
-
-# Specify different default assay (e.g., SCT)
-seurat_to_h5ad(seurat_obj, "output.h5ad", default_assay = "SCT")
-
-# Exclude dimensionality reductions if not needed
-seurat_to_h5ad(seurat_obj, "output.h5ad", include_reductions = FALSE)
+# Advanced options
+seurat_to_h5ad(seurat_obj, "output.h5ad",
+               default_assay = "RNA",
+               layer = "data",
+               include_reductions = TRUE)
 ```
 
-## Functions
+#### 4. 10X MTX → H5AD (multi-sample integration)
+
+```r
+# Prepare sample information CSV file
+sample_info <- data.frame(
+  Sample_id = c("sample1", "sample2"),
+  mtx_fns = c("path/to/sample1/matrix.mtx.gz", "path/to/sample2/matrix.mtx.gz"),
+  features_fns = c("path/to/sample1/features.tsv.gz", "path/to/sample2/features.tsv.gz"),
+  barcodes_fns = c("path/to/sample1/barcodes.tsv.gz", "path/to/sample2/barcodes.tsv.gz")
+)
+write.csv(sample_info, "samples.csv", row.names = FALSE)
+
+# Read and integrate
+read_10x_mtx_to_h5ad(
+  csv_file = "samples.csv",
+  output_h5ad = "integrated.h5ad",
+  min_counts_per_cell = 200
+)
+```
+
+#### 5. H5AD → R Objects (reverse conversion)
+
+```r
+# H5AD to SingleCellExperiment
+sce <- h5ad_to_sce("data.h5ad")
+
+# H5AD to Seurat
+seurat_obj <- h5ad_to_seurat("data.h5ad")
+
+# Specify data layer
+sce <- h5ad_to_sce("data.h5ad", use_x_as = "counts")
+```
+
+---
+
+## 🛠️ Main Functions
 
 ### Core Conversion Functions
-- `read1Cellbio()` - Reads 1Cellbio results from a zip file and creates a 1CellbioData object
-- `as.SingleCellExperiment()` - Converts a 1CellbioData object to a SingleCellExperiment object
-- `as.Seurat()` - Converts a 1CellbioData object to a Seurat object
-- `iCellbio2H5ad()` - **NEW**: Directly converts a zip file to h5ad format without creating intermediate objects. **Preserves sparse matrix format** for optimal memory efficiency and storage (typically 70-90% file size reduction)
-- `h5ad_to_sce()` - **NEW**: Converts h5ad files to SingleCellExperiment objects with sparse matrix preservation
-- `h5ad_to_seurat()` - **NEW**: Converts h5ad files to Seurat objects with sparse matrix preservation
-- `seurat_to_h5ad()` - **NEW**: Converts Seurat objects to h5ad files with sparse matrix preservation and metadata retention
+- `read1Cellbio()` - Read 1CellBio results from ZIP file
+- `iCellbio2H5ad()` - **Direct conversion**: ZIP → H5AD (memory efficient)
+- `as.Seurat.1CB()` - 1CellbioData → Seurat object
+- `as.SingleCellExperiment.1CB()` - 1CellbioData → SingleCellExperiment object
+- `seurat_to_h5ad()` - Seurat object → H5AD file
+- `read_10x_mtx_to_h5ad()` - **New feature**: Multi-sample 10X data integration
+- `h5ad_to_sce()` - H5AD → SingleCellExperiment
+- `h5ad_to_seurat()` - H5AD → Seurat object
 
-### Python Environment Configuration
-- `configure_python_env()` - **NEW**: Configures Python environment and prevents automatic anndata installation
-- `check_anndata_available()` - **NEW**: Checks if anndata is available in the current Python environment
+### Environment Configuration Functions
+- `configure_python_env()` - Smart Python environment configuration
+- `check_anndata_available()` - Check anndata availability
 
-## Details
+---
 
-The package works with the standard 1Cellbio results structure which includes:
+## 🔬 Supported Data Structures
 
-- Gene expression matrices (counts and logcounts)
-- Cell metadata
-- Gene metadata
-- Dimensionality reductions (PCA, tSNE, UMAP)
+### Input Formats
+- **1CellBio ZIP files**: Contains HDF5-format expression matrices, metadata, and dimensionality reductions
+- **Seurat objects**: Standard Seurat objects with multiple assays and reductions
+- **10X MTX files**: Cell Ranger output in sparse matrix format
+- **H5AD files**: Python scanpy format single-cell data
 
-### Data Structure
+### Output Formats
+- **H5AD**: Preserves sparse matrices, supports Python/scanpy analysis
+- **Seurat**: Contains counts, data, and dimensionality reductions
+- **SingleCellExperiment**: Bioconductor standard format
+- **Integrated data**: Unified format for multi-sample merged data
 
-The 1Cellbio results contain:
+---
 
-1. **Count Data**: Raw count matrix stored as HDF5 sparse matrix
-2. **Logcounts Data**: Log-transformed normalized data stored as HDF5 dense matrix
-3. **Cell Metadata**: Per-cell information including tissue, cluster assignments, quality control metrics
-4. **Gene Metadata**: Per-gene information
-5. **Dimensionality Reductions**: PCA, tSNE, and UMAP embeddings
+## 💡 Performance Advantages
 
-### Supported Output Formats
+### Memory Efficiency
+- **Sparse Matrix Preservation**: Automatically maintains sparse format, saving 70-90% storage space
+- **Direct Conversion**: Avoids intermediate objects, reducing memory usage
+- **Streaming Processing**: Supports efficient processing of large datasets
 
-#### SingleCellExperiment
+### User Experience
+- **Smart Detection**: Automatic Python environment detection and configuration
+- **Comprehensive Documentation**: Complete help documentation and examples for every function
+- **Error Handling**: Friendly error messages and solution suggestions
+- **Progress Display**: Detailed progress for long-running operations
 
-The SingleCellExperiment object contains:
+---
 
-- Assays: `counts` (sparse matrix) and `logcounts` (dense matrix)
-- ColData: Cell metadata
-- RowData: Gene metadata
-- ReducedDims: PCA, tSNE, and UMAP embeddings
+## 🎯 Typical Workflows
 
-#### Seurat
-
-The Seurat object contains:
-
-- Assay: RNA assay with `counts` and `data` slots
-- MetaData: Cell metadata
-- Reductions: pca, tsne, and umap
-
-#### h5ad (for Scanpy)
-
-The h5ad file contains:
-
-- X: Raw count matrix (preserved as sparse matrix for memory efficiency)
-- layers: Log-transformed data in the 'logcounts' layer (preserved as sparse matrix)
-- obs: Cell metadata
-- var: Gene metadata
-- obsm: Dimensionality reductions (PCA, tSNE, UMAP)
-
-**Note**: The `iCellbio2H5ad()` function automatically preserves sparse matrix format, resulting in significant storage savings (typically 70-90% reduction in file size compared to dense matrix storage).
-
-## Example Workflows
-
-### Standard Workflow (Two-step conversion)
+### Scenario 1: Python users receiving 1CellBio data
 
 ```r
-# Load the package
-library(ICellbioRpy)
+# Direct conversion to H5AD format
+iCellbio2H5ad("1cellbio_results.zip", "analysis_data.h5ad")
+```
 
-# Read the data
-data <- read1Cellbio("path/to/1cellbio_results.zip")
+```python
+# Continue analysis in Python
+import scanpy as sc
+adata = sc.read_h5ad("analysis_data.h5ad")
+sc.pl.umap(adata, color='level1class')
+```
 
-# Convert to SingleCellExperiment for use with Bioconductor packages
-sce <- as.SingleCellExperiment.1CB(data)
+### Scenario 2: R users performing single-cell analysis
 
-# Or convert to Seurat object for use with Seurat functions
-seurat <- as.Seurat.1CB(data)
+```r
+# Read data
+data <- read1Cellbio("1cellbio_results.zip")
 
-# Or convert to h5ad for use with Scanpy in Python
-as.h5ad(data, "results.h5ad")
+# Convert to Seurat object
+seurat_obj <- as.Seurat.1CB(data)
 
-# Perform downstream analysis
-# With SingleCellExperiment:
-library(scater)
-sce <- logNormCounts(sce)
-plotPCA(sce, colour_by = "level1class")
-
-# With Seurat:
+# Seurat analysis workflow
 library(Seurat)
-DimPlot(seurat, reduction = "umap", group.by = "level1class")
-
-# With Scanpy (in Python):
-# import scanpy as sc
-# adata = sc.read_h5ad("results.h5ad")
-# sc.pl.umap(adata, color='level1class')
+seurat_obj <- FindVariableFeatures(seurat_obj)
+seurat_obj <- RunPCA(seurat_obj)
+seurat_obj <- FindClusters(seurat_obj)
+DimPlot(seurat_obj, reduction = "umap")
 ```
 
-### Memory-Efficient Workflow (Direct conversion with Sparse Matrix Preservation)
+### Scenario 3: Multi-sample 10X data integration
 
 ```r
-# Load the package
-library(ICellbioRpy)
-
-# For large datasets, convert directly to h5ad format
-# This preserves sparse matrix format and avoids creating intermediate R objects
-# Achieves significant memory savings and storage efficiency
-iCellbio2H5ad("path/to/1cellbio_results.zip", "results.h5ad")
-
-# Optional: specify custom temporary directory and keep temp files for debugging
-iCellbio2H5ad("path/to/1cellbio_results.zip", "results.h5ad", 
-            temp_dir = "/custom/temp/dir", cleanup = FALSE)
-
-# The resulting h5ad file will be much smaller (70-90% reduction) compared to dense storage
-# Example: A dataset that would be ~470 MB as dense matrices becomes ~99 MB as sparse
-
-# Then use the h5ad file in Python with Scanpy:
-# import scanpy as sc
-# adata = sc.read_h5ad("results.h5ad")
-# print(f"Matrix sparsity: {(1 - adata.X.nnz / (adata.shape[0] * adata.shape[1])) * 100:.1f}%")
-# sc.pl.umap(adata, color='level1class')
+# Create sample information file
+# Then integrate multiple samples
+read_10x_mtx_to_h5ad("samples.csv", "integrated.h5ad")
 ```
 
-## Technical Implementation
+```python
+# Downstream analysis in Python
+import scanpy as sc
+adata = sc.read_h5ad("integrated.h5ad")
 
-The package handles HDF5 file reading with the `hdf5r` package and properly manages:
+# Batch correction and integration analysis
+sc.pp.combat(adata, key='sample_id')
+sc.tl.leiden(adata)
+sc.pl.umap(adata, color=['sample_id', 'leiden'])
+```
 
-- Sparse matrix conversion from 10x format
-- Proper dimension handling for all data types
-- Metadata parsing from HDF5 datasets
-- Automatic handling of zip file extraction
-- Conversion to h5ad format using the `anndata` package
-- Memory-efficient direct conversion for large datasets
+---
 
-## Requirements
+## 🆘 Technical Support
 
-- R >= 4.0
-- Bioconductor packages: SingleCellExperiment
-- CRAN packages: Seurat, hdf5r, jsonlite, Matrix, anndata, reticulate (>= 1.39.0)
+### Self-Help Solutions
+1. **Run Environment Check**: `source("tutorials/check_environment.R")`
+2. **Check Detailed Tutorials**: Choose tutorials based on your data type
+3. **View Function Help**: `?function_name`
 
-## License
+### Get Help
+- 📧 **Submit Issue**: [GitHub Issues](https://github.com/1-Cellbio/ICellbioRpy/issues)
+- 📚 **View Tutorials**: [Complete Tutorial Collection](tutorials/)
+- 💬 **User Community**: Join user discussion groups
 
-MIT
+---
+
+## 📋 System Requirements
+
+### R Environment
+- R ≥ 4.0.0
+- Recommended packages: Seurat, SingleCellExperiment, Matrix, data.table, hdf5r, jsonlite
+
+### Python Environment  
+- Python ≥ 3.7
+- Required packages: anndata ≥ 0.7.0
+- Recommended packages: scanpy, pandas, numpy
+
+### Hardware Recommendations
+- **Memory**: 8GB+ (more needed for large datasets)
+- **Storage**: Ensure sufficient disk space
+- **CPU**: Multi-core CPU improves processing speed
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE)
+
+---
+
+**Start your single-cell data conversion journey!** 🚀
+
+[![Get Started](https://img.shields.io/badge/Get_Started-Tutorial_Navigation-blue)](tutorials/START_HERE.md)
+[![Quick Guide](https://img.shields.io/badge/Quick_Guide-Code_Examples-green)](tutorials/QUICK_GUIDE.md)
+[![Environment Setup](https://img.shields.io/badge/Environment_Setup-Windows|macOS-orange)](tutorials/)

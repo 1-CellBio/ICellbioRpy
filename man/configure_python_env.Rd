@@ -2,7 +2,7 @@
 % Please edit documentation in R/python_config.R
 \name{configure_python_env}
 \alias{configure_python_env}
-\title{Configure Python Environment for anndata}
+\title{Configure Python environment for anndata}
 \usage{
 configure_python_env(python_path = NULL, conda_env = NULL, verbose = TRUE)
 }
@@ -18,8 +18,7 @@ Invisible TRUE if configuration successful
 }
 \description{
 This function configures the Python environment to use existing anndata installation
-and prevents automatic package installation/upgrade. By default, it uses the current
-Python environment. If anndata is not available, it provides helpful instructions.
+and prevents automatic package installation/upgrade.
 }
 \examples{
 \dontrun{
@@ -32,4 +31,5 @@ configure_python_env(conda_env = "your_env_name")
 # Use specific Python path
 configure_python_env(python_path = "/usr/local/bin/python3")
 }
+
 }

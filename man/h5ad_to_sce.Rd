@@ -4,7 +4,7 @@
 \alias{h5ad_to_sce}
 \title{Convert h5ad file to SingleCellExperiment object}
 \usage{
-h5ad_to_sce(h5ad_file, use_x_as = "logcounts", verbose = TRUE)
+h5ad_to_sce(h5ad_file, use_x_as = "auto", verbose = TRUE)
 }
 \arguments{
 \item{h5ad_file}{Path to the h5ad file}

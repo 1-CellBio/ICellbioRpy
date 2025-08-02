@@ -1,0 +1,430 @@
+---
+title: "教程2: 将1CellBio ZIP文件转换为Seurat对象"
+author: "ICellbioRpy教程"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, eval = FALSE)
+```
+
+# 🎯 教程目标
+
+在这个教程中，我们将学习如何使用`ICellbioRpy`包将1CellBio分析结果的ZIP文件转换为Seurat对象，方便在R中进行单细胞数据分析。
+
+# 📋 前提条件
+
+## 必需的R包
+
+```{r required-packages, eval=TRUE}
+# 检查必需包是否安装
+required_packages <- c("Seurat", "Matrix", "hdf5r", "jsonlite")
+missing_packages <- required_packages[!sapply(required_packages, requireNamespace, quietly = TRUE)]
+
+if (length(missing_packages) > 0) {
+  cat("需要安装以下包:", paste(missing_packages, collapse = ", "), "\n")
+  cat("请运行: install.packages(c(", paste0("'", missing_packages, "'", collapse = ", "), "))\n")
+} else {
+  cat("✓ 所有必需包已安装\n")
+}
+```
+
+# 🚀 开始教程
+
+## 第1步: 安装和加载包
+
+```{r load-packages}
+# 加载ICellbioRpy包
+library(ICellbioRpy)
+
+# 加载Seurat和其他必需包
+library(Seurat)
+library(Matrix)
+library(dplyr)
+library(ggplot2)
+
+# 显示版本信息
+cat("ICellbioRpy版本:", as.character(packageVersion("ICellbioRpy")), "\n")
+cat("Seurat版本:", as.character(packageVersion("Seurat")), "\n")
+```
+
+## 第2步: 配置Python环境（重要！）
+
+即使我们要转换为Seurat对象，仍然需要配置Python环境，因为读取1CellBio数据的某些步骤需要Python支持。
+
+```{r configure-python}
+# 配置Python环境
+configure_python_env(verbose = TRUE)
+
+# 检查anndata是否可用
+# 注意：即使转换为Seurat，这个检查仍然是必需的
+check_anndata_available()
+```
+
+**💡 为什么需要Python环境？**
+
+1CellBio的某些数据组件使用了特定的存储格式，需要Python库来正确读取
+即使最终输出是Seurat对象，中间步骤仍需要Python支持
+
+## 第3步: 准备数据文件
+
+```{r prepare-data}
+# 设置您的1CellBio ZIP文件路径
+zip_file_path <- "path/to/your/1cellbio_results.zip"
+
+# 验证文件存在
+if (file.exists(zip_file_path)) {
+  cat("✓ 找到ZIP文件:", zip_file_path, "\n")
+  
+  # 显示文件信息
+  file_info <- file.info(zip_file_path)
+  cat("文件大小:", round(file_info$size / 1024^2, 2), "MB\n")
+  cat("修改时间:", as.character(file_info$mtime), "\n")
+} else {
+  cat("✗ 找不到ZIP文件，请检查路径\n")
+  cat("请将 'path/to/your/1cellbio_results.zip' 替换为实际的文件路径\n")
+}
+```
+
+## 第4步: 读取1CellBio数据
+
+使用`read1Cellbio()`函数读取数据：
+
+```{r read-data}
+# 读取1CellBio数据
+# 这个函数会解压ZIP文件并读取所有组件
+cat("开始读取1CellBio数据...\n")
+
+cellbio_data <- read1Cellbio(
+  zip_path = zip_file_path,
+  verbose = TRUE  # 显示详细进度
+)
+
+# 查看数据结构
+cat("数据读取完成！\n")
+cat("数据类型:", class(cellbio_data), "\n")
+```
+
+**🔍 读取过程说明：**
+
+`read1Cellbio()`函数会执行以下步骤：
+
+1. **解压ZIP文件**: 提取到临时目录
+2. **解析元数据**: 读取实验配置信息
+3. **加载表达矩阵**: 读取基因表达数据（稀疏格式）
+4. **加载注释数据**: 读取细胞和基因的注释信息
+5. **加载降维结果**: 读取PCA、UMAP、t-SNE等结果
+6. **创建数据对象**: 组装成1CellbioData对象
+
+## 第5步: 转换为Seurat对象
+
+现在将1CellbioData对象转换为Seurat对象：
+
+```{r convert-to-seurat}
+# 方法1: 使用新的转换函数（推荐）
+seurat_obj <- as.Seurat.1CB(cellbio_data)
+
+# 或者方法2: 使用原始转换函数
+# seurat_obj <- as.Seurat.1CellbioData(cellbio_data)
+
+cat("✓ 转换为Seurat对象完成！\n")
+```
+
+## 第6步: 检查转换结果
+
+让我们详细检查转换后的Seurat对象：
+
+```{r examine-seurat}
+# 基本信息
+cat("=== Seurat对象基本信息 ===\n")
+print(seurat_obj)
+
+# 数据维度
+cat("\n=== 数据维度 ===\n")
+cat("细胞数量:", ncol(seurat_obj), "\n")
+cat("基因数量:", nrow(seurat_obj), "\n")
+
+# 检查assays
+cat("\n=== 可用的Assays ===\n")
+cat("Assays:", names(seurat_obj@assays), "\n")
+cat("默认assay:", DefaultAssay(seurat_obj), "\n")
+
+# 检查元数据
+cat("\n=== 细胞元数据 ===\n")
+cat("元数据列数:", ncol(seurat_obj@meta.data), "\n")
+cat("元数据列名:\n")
+print(colnames(seurat_obj@meta.data))
+
+# 显示前几行元数据
+cat("\n=== 元数据预览 ===\n")
+head(seurat_obj@meta.data, 3)
+
+# 检查降维结果
+cat("\n=== 降维结果 ===\n")
+if (length(seurat_obj@reductions) > 0) {
+  cat("可用的降维:", names(seurat_obj@reductions), "\n")
+  for (reduction_name in names(seurat_obj@reductions)) {
+    dims <- dim(seurat_obj@reductions[[reduction_name]]@cell.embeddings)
+    cat(sprintf("%s: %d维度\n", reduction_name, dims[2]))
+  }
+} else {
+  cat("无降维结果\n")
+}
+```
+
+## 第7步: 数据质量检查
+
+进行基本的数据质量检查：
+
+```{r quality-check}
+# 计算基本QC指标（如果还没有的话）
+if (!"nCount_RNA" %in% colnames(seurat_obj@meta.data)) {
+  seurat_obj[["percent.mt"]] <- PercentageFeatureSet(seurat_obj, pattern = "^MT-")
+  seurat_obj[["nCount_RNA"]] <- colSums(seurat_obj@assays$RNA@counts)
+  seurat_obj[["nFeature_RNA"]] <- colSums(seurat_obj@assays$RNA@counts > 0)
+}
+
+# 显示QC统计
+cat("=== 质量控制统计 ===\n")
+qc_stats <- seurat_obj@meta.data %>%
+  summarise(
+    细胞数 = n(),
+    平均基因数 = round(mean(nFeature_RNA, na.rm = TRUE)),
+    平均UMI数 = round(mean(nCount_RNA, na.rm = TRUE)),
+    .groups = 'drop'
+  )
+print(qc_stats)
+
+# QC指标分布
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  # UMI计数分布
+  p1 <- VlnPlot(seurat_obj, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2)
+  print(p1)
+  
+  # 如果有线粒体基因信息
+  if ("percent.mt" %in% colnames(seurat_obj@meta.data)) {
+    p2 <- VlnPlot(seurat_obj, features = "percent.mt")
+    print(p2)
+  }
+}
+```
+
+## 第8步: 可视化降维结果（如果有）
+
+如果数据包含降维结果，我们可以直接可视化：
+
+```{r visualize-reductions}
+# 检查并可视化UMAP
+if ("umap" %in% names(seurat_obj@reductions)) {
+  cat("绘制UMAP图...\n")
+  
+  # 基本UMAP图
+  p_umap <- DimPlot(seurat_obj, reduction = "umap", group.by = "seurat_clusters") +
+    ggtitle("UMAP降维结果")
+  print(p_umap)
+  
+  # 如果有细胞类型注释
+  if ("cell_type" %in% colnames(seurat_obj@meta.data)) {
+    p_umap_celltype <- DimPlot(seurat_obj, reduction = "umap", group.by = "cell_type") +
+      ggtitle("UMAP - 细胞类型")
+    print(p_umap_celltype)
+  }
+}
+
+# 检查并可视化t-SNE
+if ("tsne" %in% names(seurat_obj@reductions)) {
+  cat("绘制t-SNE图...\n")
+  p_tsne <- DimPlot(seurat_obj, reduction = "tsne", group.by = "seurat_clusters") +
+    ggtitle("t-SNE降维结果")
+  print(p_tsne)
+}
+
+# 检查并可视化PCA
+if ("pca" %in% names(seurat_obj@reductions)) {
+  cat("绘制PCA图...\n")
+  p_pca <- DimPlot(seurat_obj, reduction = "pca", group.by = "seurat_clusters") +
+    ggtitle("PCA降维结果")
+  print(p_pca)
+  
+  # PCA贡献度
+  p_elbow <- ElbowPlot(seurat_obj, ndims = 20)
+  print(p_elbow)
+}
+```
+
+## 第9步: 保存Seurat对象
+
+将转换后的Seurat对象保存以备后续使用：
+
+```{r save-seurat}
+# 保存为RDS文件（推荐格式）
+output_file <- "1cellbio_seurat_object.rds"
+
+saveRDS(seurat_obj, file = output_file)
+cat("✓ Seurat对象已保存到:", output_file, "\n")
+
+# 检查保存的文件
+if (file.exists(output_file)) {
+  file_size <- round(file.size(output_file) / 1024^2, 2)
+  cat("文件大小:", file_size, "MB\n")
+}
+
+# 验证保存和加载
+cat("\n验证保存/加载功能...\n")
+test_obj <- readRDS(output_file)
+cat("✓ 文件读取成功，细胞数:", ncol(test_obj), "，基因数:", nrow(test_obj), "\n")
+```
+
+# 🔬 进阶分析示例
+
+现在您有了Seurat对象，可以进行标准的单细胞分析：
+
+## 重新聚类分析
+
+```{r advanced-analysis}
+# 如果需要重新进行聚类分析
+if (!"seurat_clusters" %in% colnames(seurat_obj@meta.data)) {
+  cat("执行聚类分析...\n")
+  
+  # 标准化数据
+  seurat_obj <- NormalizeData(seurat_obj)
+  
+  # 找到高变基因
+  seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 2000)
+  
+  # 缩放数据
+  seurat_obj <- ScaleData(seurat_obj)
+  
+  # PCA
+  seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
+  
+  # 聚类
+  seurat_obj <- FindNeighbors(seurat_obj, dims = 1:10)
+  seurat_obj <- FindClusters(seurat_obj, resolution = 0.5)
+  
+  # UMAP
+  seurat_obj <- RunUMAP(seurat_obj, dims = 1:10)
+  
+  cat("✓ 聚类分析完成\n")
+}
+```
+
+## 差异基因分析
+
+```{r differential-genes}
+# 寻找标记基因
+if ("seurat_clusters" %in% colnames(seurat_obj@meta.data)) {
+  cat("寻找聚类标记基因...\n")
+  
+  # 寻找所有聚类的标记基因
+  cluster_markers <- FindAllMarkers(seurat_obj, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+  
+  # 显示每个聚类的前5个标记基因
+  top_markers <- cluster_markers %>%
+    group_by(cluster) %>%
+    slice_max(n = 5, order_by = avg_log2FC)
+  
+  cat("每个聚类的前5个标记基因:\n")
+  print(top_markers)
+}
+```
+
+# 🔧 常见问题排查
+
+## 问题1: Python环境配置失败
+
+**症状**: 出现Python相关错误
+**解决方法**:
+
+```{r troubleshoot-python-seurat}
+# 检查当前Python配置
+reticulate::py_config()
+
+# 重新配置Python环境
+configure_python_env(conda_env = "base", verbose = TRUE)
+
+# 或指定Python路径
+# configure_python_env(python_path = "/usr/local/bin/python3")
+```
+
+## 问题2: 内存不足
+
+**症状**: "Cannot allocate memory" 错误
+**解决方法**:
+
+```{r memory-management}
+# 清理内存
+gc()
+
+# 检查对象大小
+object.size(seurat_obj)
+
+# 如果内存不足，可以只保留重要数据
+# 例如，删除不必要的assays或降维结果
+```
+
+## 问题3: 降维结果缺失
+
+**症状**: 没有UMAP或t-SNE结果
+**解决方法**:
+
+```{r missing-reductions}
+# 检查原始数据是否包含降维结果
+if (length(seurat_obj@reductions) == 0) {
+  cat("原始数据不包含降维结果，需要重新计算\n")
+  
+  # 重新计算PCA和UMAP
+  seurat_obj <- RunPCA(seurat_obj)
+  seurat_obj <- RunUMAP(seurat_obj, dims = 1:10)
+}
+```
+
+## 问题4: 元数据信息缺失
+
+**症状**: 缺少细胞类型或其他注释
+**解决方法**:
+
+```{r missing-metadata}
+# 检查可用的元数据列
+colnames(seurat_obj@meta.data)
+
+# 如果需要添加新的元数据，可以手动添加
+# seurat_obj$new_annotation <- "value"
+```
+
+# 📚 下一步分析建议
+
+成功转换为Seurat对象后，您可以：
+
+1. **质量控制**: 过滤低质量细胞和基因
+2. **聚类分析**: 识别细胞群体
+3. **差异基因分析**: 找到标记基因
+4. **功能注释**: 进行GO/KEGG富集分析
+5. **轨迹分析**: 如果是发育数据，可以进行拟时序分析
+6. **整合分析**: 与其他数据集整合
+
+## 推荐资源
+
+- [Seurat官方教程](https://satijalab.org/seurat/articles/get_started.html)
+- [单细胞分析最佳实践](https://www.sc-best-practices.org/)
+- 继续学习本包的其他教程
+
+# 💡 小贴士
+
+1. **保存检查点**: 在重要步骤后保存对象
+2. **版本兼容**: 确保Seurat版本兼容（推荐v4.0+）
+3. **内存管理**: 大数据集处理时注意内存使用
+4. **参数调优**: 根据数据特点调整聚类分辨率等参数
+
+---
+
+**需要帮助？**
+- 查看函数帮助: `?read1Cellbio`, `?as.Seurat.1CB`
+- Seurat帮助: `vignette("seurat")`
+- 项目Issues: [GitHub地址]

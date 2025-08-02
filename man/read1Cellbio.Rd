@@ -19,7 +19,7 @@ and creates a 1CellbioData object that can be converted to Seurat or SingleCellE
 \examples{
 \dontrun{
 data <- read1Cellbio("path/to/results.zip")
-sce <- as.SingleCellExperiment(data)
-seurat <- as.Seurat(data)
+sce <- as.SingleCellExperiment.1CB(data)
+seurat <- as.Seurat.1CB(data)
 }
 }

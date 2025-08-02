@@ -12,8 +12,8 @@ LazyData: true
 RoxygenNote: 7.3.2
 Imports: SingleCellExperiment, Seurat, hdf5r, jsonlite, methods, utils,
         Matrix, anndata, reticulate (<= 1.42.0), S4Vectors,
-        SummarizedExperiment
+        SummarizedExperiment, data.table
 Suggests: testthat, knitr, rmarkdown
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-Built: R 4.4.3; ; 2025-08-02 06:16:50 UTC; unix
+Built: R 4.4.3; ; 2025-08-02 11:07:32 UTC; unix

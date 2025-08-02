@@ -4,7 +4,7 @@
 \alias{as.SingleCellExperiment.1CellbioData}
 \title{Convert 1CellbioData to SingleCellExperiment object}
 \usage{
-\method{as.SingleCellExperiment}{`1CellbioData`}(object, ...)
+as.SingleCellExperiment.1CellbioData(object, ...)
 }
 \arguments{
 \item{object}{A 1CellbioData object}

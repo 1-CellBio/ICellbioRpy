@@ -19,8 +19,8 @@ Type 'q()' to quit R.
 > library(ICellbioRpy)
 > 
 > test_check("ICellbioRpy")
-[ FAIL 0 | WARN 0 | SKIP 0 | PASS 2 ]
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 7 ]
 > 
 > proc.time()
    user  system elapsed 
-  4.915   0.320   5.239 
+  5.012   0.313   5.371 

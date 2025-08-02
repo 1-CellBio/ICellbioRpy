@@ -20,7 +20,8 @@ Imports:
     anndata,
     reticulate (<= 1.42.0),
     S4Vectors,
-    SummarizedExperiment
+    SummarizedExperiment,
+    data.table
 Suggests:
     testthat,
     knitr,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/iCellbio2H5ad.R
 \name{iCellbio2H5ad}
 \alias{iCellbio2H5ad}
-\title{Convert 1Cellbio zip file to h5ad format}
+\title{Convert 1Cellbio results zip file directly to h5ad format}
 \usage{
 iCellbio2H5ad(zip_path, h5ad_path, temp_dir = NULL, cleanup = TRUE)
 }
@@ -30,11 +30,11 @@ compared to dense matrix storage).
 }
 \examples{
 \dontrun{
-# Basic usage
+# Basic usage - preserves sparse matrix format automatically
 iCellbio2H5ad("path/to/1Cellbio_results.zip", "output.h5ad")
 
 # With custom temporary directory
-iCellbio2H5ad("path/to/1Cellbio_results.zip", "output.h5ad",
-              temp_dir = "/custom/temp")
+iCellbio2H5ad("path/to/1Cellbio_results.zip", "output.h5ad", 
+              temp_dir = "/custom/temp/dir")
 }
 }
