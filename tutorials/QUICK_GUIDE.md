@@ -6,8 +6,8 @@
 
 ### 🚨 重要提醒
 **如果您是完全初学者，请先完成环境安装教程：**
-- Windows用户：[教程0a: Windows环境完整安装指南](tutorial_0_environment_setup_windows.html)
-- macOS用户：[教程0b: macOS环境完整安装指南](tutorial_0_environment_setup_macos.html)
+- Windows用户：[教程0a: Windows环境完整安装指南](tutorial_0_environment_setup_windows.md)
+- macOS用户：[教程0b: macOS环境完整安装指南](tutorial_0_environment_setup_macos.md)
 
 ### ✅ 必需软件（有经验用户检查清单）
 - [ ] R (≥ 4.0.0) 已安装
@@ -35,10 +35,10 @@ source("tutorials/test_tutorials.R")
 
 | 您有什么数据？ | 想要什么格式？ | 推荐教程 | 难度 |
 |---------------|---------------|----------|------|
-| 1CellBio ZIP文件 | H5AD (Python分析) | [教程1](tutorial_1_1cellbio_to_h5ad.html) | ⭐⭐ |
-| 1CellBio ZIP文件 | Seurat (R分析) | [教程2](tutorial_2_1cellbio_to_seurat.html) | ⭐⭐ |
-| Seurat对象 | H5AD (转到Python) | [教程3](tutorial_3_seurat_to_h5ad.html) | ⭐⭐⭐ |
-| 10X MTX文件 | H5AD (多样本整合) | [教程4](tutorial_4_10x_mtx_to_h5ad.html) | ⭐⭐⭐⭐ |
+| 1CellBio ZIP文件 | H5AD (Python分析) | [教程1](tutorial_1_1cellbio_to_h5ad.md) | ⭐⭐ |
+| 1CellBio ZIP文件 | Seurat (R分析) | [教程2](tutorial_2_1cellbio_to_seurat.md) | ⭐⭐ |
+| Seurat对象 | H5AD (转到Python) | [教程3](tutorial_3_seurat_to_h5ad.md) | ⭐⭐⭐ |
+| 10X MTX文件 | H5AD (多样本整合) | [教程4](tutorial_4_10x_mtx_to_h5ad.md) | ⭐⭐⭐⭐ |
 
 ## ⚡ 快速开始代码片段
 

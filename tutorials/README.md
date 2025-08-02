@@ -6,7 +6,7 @@
 
 ### 🔧 环境安装教程（必须先完成）
 
-#### [教程0a: Windows环境完整安装指南](tutorial_0_environment_setup_windows.html)
+#### [教程0a: Windows环境完整安装指南](tutorial_0_environment_setup_windows.md)
 **适用用户**: Windows系统的完全初学者
 
 **主要内容**:
@@ -21,7 +21,7 @@
 
 ---
 
-#### [教程0b: macOS环境完整安装指南](tutorial_0_environment_setup_macos.html)
+#### [教程0b: macOS环境完整安装指南](tutorial_0_environment_setup_macos.md)
 **适用用户**: macOS系统的完全初学者
 
 **主要内容**:
@@ -38,7 +38,7 @@
 
 ### 📊 数据转换教程
 
-### [教程1: 将1CellBio ZIP文件转换为H5AD格式](tutorial_1_1cellbio_to_h5ad.html)
+### [教程1: 将1CellBio ZIP文件转换为H5AD格式](tutorial_1_1cellbio_to_h5ad.md)
 **适用场景**: 您有1CellBio分析结果，需要在Python/scanpy中进行下游分析
 
 **主要内容**:
@@ -52,7 +52,7 @@
 
 ---
 
-### [教程2: 将1CellBio ZIP文件转换为Seurat对象](tutorial_2_1cellbio_to_seurat.html)  
+### [教程2: 将1CellBio ZIP文件转换为Seurat对象](tutorial_2_1cellbio_to_seurat.md)  
 **适用场景**: 您有1CellBio分析结果，需要在R/Seurat中进行分析
 
 **主要内容**:
@@ -66,7 +66,7 @@
 
 ---
 
-### [教程3: 将Seurat对象转换为H5AD格式](tutorial_3_seurat_to_h5ad.html)
+### [教程3: 将Seurat对象转换为H5AD格式](tutorial_3_seurat_to_h5ad.md)
 **适用场景**: 您在R中分析了数据，现在需要转到Python环境
 
 **主要内容**:
@@ -80,7 +80,7 @@
 
 ---
 
-### [教程4: 读取10X MTX格式数据并转换为H5AD](tutorial_4_10x_mtx_to_h5ad.html)
+### [教程4: 读取10X MTX格式数据并转换为H5AD](tutorial_4_10x_mtx_to_h5ad.md)
 **适用场景**: 您有多个10X Cell Ranger输出，需要整合并转换格式
 
 **主要内容**:

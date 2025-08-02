@@ -29,8 +29,8 @@ ICellbioRpy is a professional R package for single-cell RNA-seq data format conv
 
 | OS | Installation Tutorial | Description |
 |----|--------------------|-------------|
-| **Windows** | [📘 Windows Setup Guide](tutorials/tutorial_0_environment_setup_windows.html) | Complete guide from R to conda environment |
-| **macOS** | [📘 macOS Setup Guide](tutorials/tutorial_0_environment_setup_macos.html) | Optimized for Apple Silicon |
+| **Windows** | [📘 Windows Setup Guide](tutorials/tutorial_0_environment_setup_windows.md) | Complete guide from R to conda environment |
+| **macOS** | [📘 macOS Setup Guide](tutorials/tutorial_0_environment_setup_macos.md) | Optimized for Apple Silicon |
 
 ### ⚡ Environment Check
 
@@ -56,17 +56,17 @@ devtools::install_github("1-Cellbio/ICellbioRpy")
 We provide detailed beginner-friendly tutorials that can be run directly in RStudio:
 
 ### 🔧 Environment Setup Tutorials
-- [📘 Windows Setup](tutorials/tutorial_0_environment_setup_windows.html) - Complete Windows configuration guide
-- [📘 macOS Setup](tutorials/tutorial_0_environment_setup_macos.html) - Complete macOS configuration guide
+- [📘 Windows Setup](tutorials/tutorial_0_environment_setup_windows.md) - Complete Windows configuration guide
+- [📘 macOS Setup](tutorials/tutorial_0_environment_setup_macos.md) - Complete macOS configuration guide
 
 ### 📊 Data Conversion Tutorials
 
 | Tutorial | Input | Output | Difficulty | Duration |
 |----------|-------|--------|------------|----------|
-| [Tutorial 1](tutorials/tutorial_1_1cellbio_to_h5ad.html) | 1CellBio ZIP | H5AD | ⭐⭐ | 30-45min |
-| [Tutorial 2](tutorials/tutorial_2_1cellbio_to_seurat.html) | 1CellBio ZIP | Seurat | ⭐⭐ | 45-60min |
-| [Tutorial 3](tutorials/tutorial_3_seurat_to_h5ad.html) | Seurat Object | H5AD | ⭐⭐⭐ | 40-50min |
-| [Tutorial 4](tutorials/tutorial_4_10x_mtx_to_h5ad.html) | 10X MTX Files | H5AD | ⭐⭐⭐⭐ | 50-70min |
+| [Tutorial 1](tutorials/tutorial_1_1cellbio_to_h5ad.md) | 1CellBio ZIP | H5AD | ⭐⭐ | 30-45min |
+| [Tutorial 2](tutorials/tutorial_2_1cellbio_to_seurat.md) | 1CellBio ZIP | Seurat | ⭐⭐ | 45-60min |
+| [Tutorial 3](tutorials/tutorial_3_seurat_to_h5ad.md) | Seurat Object | H5AD | ⭐⭐⭐ | 40-50min |
+| [Tutorial 4](tutorials/tutorial_4_10x_mtx_to_h5ad.md) | 10X MTX Files | H5AD | ⭐⭐⭐⭐ | 50-70min |
 
 ### 📖 Additional Resources
 - [📍 Start Here](tutorials/START_HERE.md) - Begin your learning journey here

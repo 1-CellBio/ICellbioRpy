@@ -29,8 +29,8 @@ ICellbioRpy是一个专业的R包，用于单细胞RNA测序数据格式转换�
 
 | 操作系统 | 安装教程 | 说明 |
 |---------|---------|------|
-| **Windows** | [📘 Windows环境安装指南](tutorials/tutorial_0_environment_setup_windows.html) | 从R安装到conda环境的完整指南 |
-| **macOS** | [📘 macOS环境安装指南](tutorials/tutorial_0_environment_setup_macos.html) | 支持Apple Silicon优化 |
+| **Windows** | [📘 Windows环境安装指南](tutorials/tutorial_0_environment_setup_windows.md) | 从R安装到conda环境的完整指南 |
+| **macOS** | [📘 macOS环境安装指南](tutorials/tutorial_0_environment_setup_macos.md) | 支持Apple Silicon优化 |
 
 ### ⚡ 环境检测
 
@@ -56,17 +56,17 @@ devtools::install_github("1-Cellbio/ICellbioRpy")
 我们提供了面向初学者的详细教程，每个教程都可以在RStudio中直接运行：
 
 ### 🔧 环境安装教程
-- [📘 Windows环境安装](tutorials/tutorial_0_environment_setup_windows.html) - Windows系统完整配置指南
-- [📘 macOS环境安装](tutorials/tutorial_0_environment_setup_macos.html) - macOS系统完整配置指南
+- [📘 Windows环境安装](tutorials/tutorial_0_environment_setup_windows.md) - Windows系统完整配置指南
+- [📘 macOS环境安装](tutorials/tutorial_0_environment_setup_macos.md) - macOS系统完整配置指南
 
 ### 📊 数据转换教程
 
 | 教程 | 输入格式 | 输出格式 | 难度 | 用时 |
 |------|---------|---------|------|------|
-| [教程1](tutorials/tutorial_1_1cellbio_to_h5ad.html) | 1CellBio ZIP | H5AD | ⭐⭐ | 30-45min |
-| [教程2](tutorials/tutorial_2_1cellbio_to_seurat.html) | 1CellBio ZIP | Seurat | ⭐⭐ | 45-60min |
-| [教程3](tutorials/tutorial_3_seurat_to_h5ad.html) | Seurat对象 | H5AD | ⭐⭐⭐ | 40-50min |
-| [教程4](tutorials/tutorial_4_10x_mtx_to_h5ad.html) | 10X MTX文件 | H5AD | ⭐⭐⭐⭐ | 50-70min |
+| [教程1](tutorials/tutorial_1_1cellbio_to_h5ad.md) | 1CellBio ZIP | H5AD | ⭐⭐ | 30-45min |
+| [教程2](tutorials/tutorial_2_1cellbio_to_seurat.md) | 1CellBio ZIP | Seurat | ⭐⭐ | 45-60min |
+| [教程3](tutorials/tutorial_3_seurat_to_h5ad.md) | Seurat对象 | H5AD | ⭐⭐⭐ | 40-50min |
+| [教程4](tutorials/tutorial_4_10x_mtx_to_h5ad.md) | 10X MTX文件 | H5AD | ⭐⭐⭐⭐ | 50-70min |
 
 ### 📖 其他资源
 - [📍 新手导航](tutorials/START_HERE.md) - 从这里开始您的学习之旅
