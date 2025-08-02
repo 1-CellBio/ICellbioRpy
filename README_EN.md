@@ -1,7 +1,6 @@
 # ICellbioRpy 📊🧬
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![R-CMD-check](https://github.com/1-Cellbio/ICellbioRpy/workflows/R-CMD-check/badge.svg)](https://github.com/1-Cellbio/ICellbioRpy/actions)
 
 > **One-Stop Single-Cell Data Format Conversion Solution**  
 > Seamless conversion between 1CellBio, Seurat, SingleCellExperiment, 10X MTX and H5AD formats

@@ -4,7 +4,7 @@
 .RData
 .Ruserdata
 *.Rproj
-..Rcheck
+*.Rcheck
 
 # Package build
 *.tar.gz

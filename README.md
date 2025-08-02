@@ -1,7 +1,6 @@
 # ICellbioRpy 📊🧬
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![R-CMD-check](https://github.com/1-Cellbio/ICellbioRpy/workflows/R-CMD-check/badge.svg)](https://github.com/1-Cellbio/ICellbioRpy/actions)
 
 > **一站式单细胞数据格式转换解决方案**  
 > 支持1CellBio、Seurat、SingleCellExperiment、10X MTX与H5AD格式间的灵活转换
