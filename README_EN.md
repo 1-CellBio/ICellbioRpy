@@ -112,14 +112,24 @@ as.h5ad(data, "output.h5ad")
 #### 2. 1CellBio → Seurat (for R analysis)
 
 ```r
-# Read and convert
+# Read data
 data <- read1Cellbio("path/to/1cellbio_results.zip")
-seurat_obj <- as.Seurat.1CB(data)
+
+# Convert to Seurat object (must specify gene and cell name columns)
+# Function will automatically display all available column names for reference
+seurat_obj <- as.Seurat.1CB(data, 
+                           rownames = "id",        # gene name column
+                           colnames = "cell_id")   # cell name column
 
 # Visualization
 library(Seurat)
 DimPlot(seurat_obj, reduction = "umap", group.by = "level1class")
 ```
+
+**💡 Important Notes:**
+- `rownames` and `colnames` parameters are required
+- If unsure about column names, the function will automatically display all available options when called
+- Duplicate names will be automatically suffixed (e.g., Gene-1, Gene-2)
 
 #### 3. Seurat → H5AD (cross-language conversion)
 

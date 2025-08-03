@@ -105,21 +105,41 @@ cat("数据类型:", class(cellbio_data), "\n")
 5. **加载降维结果**: 读取PCA、UMAP、t-SNE等结果
 6. **创建数据对象**: 组装成1CellbioData对象
 
-## 第5步: 转换为Seurat对象
+## 第5步: 查看数据结构（可选）
+
+在转换之前，你可以先查看数据中有哪些可用的列名：
+
+```r
+# 如果想提前查看可用的列名，可以尝试不带参数调用函数
+# 这会显示错误消息，但同时也会显示所有可用的列名
+tryCatch({
+  as.Seurat.1CB(cellbio_data)
+}, error = function(e) {
+  cat("显示了可用的列名信息\n")
+})
+```
+
+## 第6步: 转换为Seurat对象
 
 现在将1CellbioData对象转换为Seurat对象：
 
 ```r
-# 方法1: 使用新的转换函数（推荐）
-seurat_obj <- as.Seurat.1CB(cellbio_data)
-
-# 或者方法2: 使用原始转换函数
-# seurat_obj <- as.Seurat.1CellbioData(cellbio_data)
+# 转换为Seurat对象（需要指定基因名和细胞名列）
+# 首次调用时，函数会自动显示所有可用的列名
+seurat_obj <- as.Seurat.1CB(cellbio_data,
+                           rownames = "id",        # 基因名列
+                           colnames = "cell_id")   # 细胞名列
 
 cat("✓ 转换为Seurat对象完成！\n")
 ```
 
-## 第6步: 检查转换结果
+**💡 转换说明：**
+- `rownames` 和 `colnames` 参数是必填的
+- 函数执行时会首先显示所有可用的列名，方便用户选择
+- 如果名称有重复，会自动添加后缀（如 Cell-1, Cell-2）
+- 旧的 `as.Seurat.1CellbioData()` 函数仍然可用，但也需要相同的参数
+
+## 第7步: 检查转换结果
 
 让我们详细检查转换后的Seurat对象：
 
@@ -161,7 +181,7 @@ if (length(seurat_obj@reductions) > 0) {
 }
 ```
 
-## 第7步: 数据质量检查
+## 第8步: 数据质量检查
 
 进行基本的数据质量检查：
 
@@ -198,7 +218,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 }
 ```
 
-## 第8步: 可视化降维结果（如果有）
+## 第9步: 可视化降维结果（如果有）
 
 如果数据包含降维结果，我们可以直接可视化：
 
@@ -241,7 +261,7 @@ if ("pca" %in% names(seurat_obj@reductions)) {
 }
 ```
 
-## 第9步: 保存Seurat对象
+## 第10步: 保存Seurat对象
 
 将转换后的Seurat对象保存以备后续使用：
 

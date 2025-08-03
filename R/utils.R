@@ -64,7 +64,7 @@ read_hdf5_sparse_matrix <- function(file_path) {
 #' 
 #' @param file_path Path to the HDF5 file
 #' @return A matrix object (dense or sparse)
-#' 
+#' @export
 #' @import hdf5r
 read_hdf5_matrix <- function(file_path) {
   h5file <- hdf5r::H5File$new(file_path, mode = "r")

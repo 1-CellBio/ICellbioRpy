@@ -9,8 +9,9 @@
 #' @examples
 #' \dontrun{
 #' data <- read1Cellbio("path/to/results.zip")
-#' sce <- as.SingleCellExperiment.1CB(data)
-#' seurat <- as.Seurat.1CB(data)
+#' # 需要指定用作基因名和细胞名的列
+#' sce <- as.SingleCellExperiment.1CB(data, rownames = "id", colnames = "cell_id")
+#' seurat <- as.Seurat.1CB(data, rownames = "id", colnames = "cell_id")
 #' }
 read1Cellbio <- function(file_path) {
   # Check if file exists
@@ -132,20 +133,29 @@ read_hdf5_dataframe <- function(file_path) {
   return(df)
 }
 
+#' Helper function to make unique names
+#'
+#' @param names Character vector of names
+#' @return Character vector with unique names
+make_unique_names <- function(names) {
+  if (any(duplicated(names))) {
+    names <- make.unique(names, sep = "-")
+  }
+  return(names)
+}
+
 #' Convert 1CellbioData to Seurat object
 #'
 #' @param object A 1CellbioData object
+#' @param rownames Character string specifying the column name in row data to use as gene names (required)
+#' @param colnames Character string specifying the column name in column data to use as cell names (required)
 #' @param ... Additional arguments (not used)
 #' @return A Seurat object
 #' @export
-as.Seurat.1CellbioData <- function(object, ...) {
-  # Read count data
-  counts_path <- file.path(object$base_path, object$experiment$summarized_experiment$assays[[1]]$resource$path)
-  counts_matrix <- read_hdf5_sparse_matrix(counts_path)
+as.Seurat.1CellbioData <- function(object, rownames = NULL, colnames = NULL, ...) {
   
-  # Read logcounts data
-  logcounts_path <- file.path(object$base_path, object$experiment$summarized_experiment$assays[[2]]$resource$path)
-  logcounts_matrix <- read_hdf5_matrix(logcounts_path)
+  # Read metadata first to show available options
+  cat("正在读取数据结构信息...\n")
   
   # Read column data (cell metadata)
   coldata_path <- file.path(object$base_path, object$experiment$summarized_experiment$column_data$resource$path)
@@ -155,18 +165,46 @@ as.Seurat.1CellbioData <- function(object, ...) {
   rowdata_path <- file.path(object$base_path, object$experiment$summarized_experiment$row_data$resource$path)
   rowdata_df <- read_hdf5_dataframe(rowdata_path)
   
-  # Set row and column names
-  if ("cell_id" %in% colnames(coldata_df)) {
-    rownames(coldata_df) <- coldata_df$cell_id
+  # Display available column names
+  cat("可用的细胞名列 (colnames):", paste(colnames(coldata_df), collapse = ", "), "\n")
+  cat("可用的基因名列 (rownames):", paste(colnames(rowdata_df), collapse = ", "), "\n")
+  
+  # Check required parameters
+  if (is.null(rownames)) {
+    stop("参数 'rownames' 是必填项。请指定用作基因名的列名。")
   }
   
-  if ("id" %in% colnames(rowdata_df)) {
-    rownames(rowdata_df) <- rowdata_df$id
-    colnames(counts_matrix) <- rownames(coldata_df)
-    rownames(counts_matrix) <- rownames(rowdata_df)
-    colnames(logcounts_matrix) <- rownames(coldata_df)
-    rownames(logcounts_matrix) <- rownames(rowdata_df)
+  if (is.null(colnames)) {
+    stop("参数 'colnames' 是必填项。请指定用作细胞名的列名。")
   }
+  
+  # Read count data
+  counts_path <- file.path(object$base_path, object$experiment$summarized_experiment$assays[[1]]$resource$path)
+  counts_matrix <- read_hdf5_sparse_matrix(counts_path)
+  
+  # Read logcounts data
+  logcounts_path <- file.path(object$base_path, object$experiment$summarized_experiment$assays[[2]]$resource$path)
+  logcounts_matrix <- read_hdf5_matrix(logcounts_path)
+  
+  # Check if specified column names exist
+  if (!colnames %in% colnames(coldata_df)) {
+    stop("指定的细胞名列 '", colnames, "' 在列数据中不存在。可用列名：", paste(colnames(coldata_df), collapse = ", "))
+  }
+  
+  if (!rownames %in% colnames(rowdata_df)) {
+    stop("指定的基因名列 '", rownames, "' 在行数据中不存在。可用列名：", paste(colnames(rowdata_df), collapse = ", "))
+  }
+  
+  # Set row and column names with uniqueness check
+  cell_names <- make_unique_names(as.character(coldata_df[[colnames]]))
+  gene_names <- make_unique_names(as.character(rowdata_df[[rownames]]))
+  
+  rownames(coldata_df) <- cell_names
+  rownames(rowdata_df) <- gene_names
+  colnames(counts_matrix) <- cell_names
+  rownames(counts_matrix) <- gene_names
+  colnames(logcounts_matrix) <- cell_names
+  rownames(logcounts_matrix) <- gene_names
   
   # Read dimensionality reduction data
   reduced_dims <- list()
@@ -175,7 +213,7 @@ as.Seurat.1CellbioData <- function(object, ...) {
     reddim_path <- file.path(object$base_path, reddim$resource$path)
     reduced_dims[[reddim_name]] <- read_hdf5_matrix(reddim_path)
     if (nrow(reduced_dims[[reddim_name]]) == nrow(coldata_df)) {
-      rownames(reduced_dims[[reddim_name]]) <- rownames(coldata_df)
+      rownames(reduced_dims[[reddim_name]]) <- cell_names
     }
   }
   
@@ -234,17 +272,15 @@ as.Seurat.1CellbioData <- function(object, ...) {
 #' Convert 1CellbioData to SingleCellExperiment object
 #'
 #' @param object A 1CellbioData object
+#' @param rownames Character string specifying the column name in row data to use as gene names (required)
+#' @param colnames Character string specifying the column name in column data to use as cell names (required)
 #' @param ... Additional arguments (not used)
 #' @return A SingleCellExperiment object
 #' @export
-as.SingleCellExperiment.1CellbioData <- function(object, ...) {
-  # Read count data
-  counts_path <- file.path(object$base_path, object$experiment$summarized_experiment$assays[[1]]$resource$path)
-  counts_matrix <- read_hdf5_sparse_matrix(counts_path)
+as.SingleCellExperiment.1CellbioData <- function(object, rownames = NULL, colnames = NULL, ...) {
   
-  # Read logcounts data
-  logcounts_path <- file.path(object$base_path, object$experiment$summarized_experiment$assays[[2]]$resource$path)
-  logcounts_matrix <- read_hdf5_matrix(logcounts_path)
+  # Read metadata first to show available options
+  cat("正在读取数据结构信息...\n")
   
   # Read column data (cell metadata)
   coldata_path <- file.path(object$base_path, object$experiment$summarized_experiment$column_data$resource$path)
@@ -254,23 +290,46 @@ as.SingleCellExperiment.1CellbioData <- function(object, ...) {
   rowdata_path <- file.path(object$base_path, object$experiment$summarized_experiment$row_data$resource$path)
   rowdata_df <- read_hdf5_dataframe(rowdata_path)
   
-  # Set row and column names
-  if ("cell_id" %in% colnames(coldata_df)) {
-    rownames(coldata_df) <- coldata_df$cell_id
-  } else {
-    rownames(coldata_df) <- seq_len(nrow(coldata_df))
+  # Display available column names
+  cat("可用的细胞名列 (colnames):", paste(colnames(coldata_df), collapse = ", "), "\n")
+  cat("可用的基因名列 (rownames):", paste(colnames(rowdata_df), collapse = ", "), "\n")
+  
+  # Check required parameters
+  if (is.null(rownames)) {
+    stop("参数 'rownames' 是必填项。请指定用作基因名的列名。")
   }
   
-  if ("id" %in% colnames(rowdata_df)) {
-    rownames(rowdata_df) <- rowdata_df$id
-  } else {
-    rownames(rowdata_df) <- seq_len(nrow(rowdata_df))
+  if (is.null(colnames)) {
+    stop("参数 'colnames' 是必填项。请指定用作细胞名的列名。")
   }
   
-  colnames(counts_matrix) <- rownames(coldata_df)
-  rownames(counts_matrix) <- rownames(rowdata_df)
-  colnames(logcounts_matrix) <- rownames(coldata_df)
-  rownames(logcounts_matrix) <- rownames(rowdata_df)
+  # Read count data
+  counts_path <- file.path(object$base_path, object$experiment$summarized_experiment$assays[[1]]$resource$path)
+  counts_matrix <- read_hdf5_sparse_matrix(counts_path)
+  
+  # Read logcounts data
+  logcounts_path <- file.path(object$base_path, object$experiment$summarized_experiment$assays[[2]]$resource$path)
+  logcounts_matrix <- read_hdf5_matrix(logcounts_path)
+  
+  # Check if specified column names exist
+  if (!colnames %in% colnames(coldata_df)) {
+    stop("指定的细胞名列 '", colnames, "' 在列数据中不存在。可用列名：", paste(colnames(coldata_df), collapse = ", "))
+  }
+  
+  if (!rownames %in% colnames(rowdata_df)) {
+    stop("指定的基因名列 '", rownames, "' 在行数据中不存在。可用列名：", paste(colnames(rowdata_df), collapse = ", "))
+  }
+  
+  # Set row and column names with uniqueness check
+  cell_names <- make_unique_names(as.character(coldata_df[[colnames]]))
+  gene_names <- make_unique_names(as.character(rowdata_df[[rownames]]))
+  
+  rownames(coldata_df) <- cell_names
+  rownames(rowdata_df) <- gene_names
+  colnames(counts_matrix) <- cell_names
+  rownames(counts_matrix) <- gene_names
+  colnames(logcounts_matrix) <- cell_names
+  rownames(logcounts_matrix) <- gene_names
   
   # Read dimensionality reduction data
   reduced_dims <- list()
@@ -279,7 +338,7 @@ as.SingleCellExperiment.1CellbioData <- function(object, ...) {
     reddim_path <- file.path(object$base_path, reddim$resource$path)
     reduced_dims[[reddim_name]] <- read_hdf5_matrix(reddim_path)
     if (nrow(reduced_dims[[reddim_name]]) == nrow(coldata_df)) {
-      rownames(reduced_dims[[reddim_name]]) <- rownames(coldata_df)
+      rownames(reduced_dims[[reddim_name]]) <- cell_names
     }
   }
   
@@ -316,6 +375,8 @@ as.Seurat.1CB <- function(object, ...) {
 #' S3 method for converting 1CellbioData to Seurat object
 #'
 #' @param object A 1CellbioData object
+#' @param rownames Character string specifying the column name in row data to use as gene names (required)
+#' @param colnames Character string specifying the column name in column data to use as cell names (required)
 #' @param ... Additional arguments (not used)
 #' @return A Seurat object
 #' @export
@@ -336,6 +397,8 @@ as.SingleCellExperiment.1CB <- function(object, ...) {
 #' S3 method for converting 1CellbioData to SingleCellExperiment object
 #'
 #' @param object A 1CellbioData object
+#' @param rownames Character string specifying the column name in row data to use as gene names (required)
+#' @param colnames Character string specifying the column name in column data to use as cell names (required)
 #' @param ... Additional arguments (not used)
 #' @return A SingleCellExperiment object
 #' @export

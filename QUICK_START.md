@@ -84,8 +84,11 @@ print(data)
 #### 转换为SingleCellExperiment
 
 ```r
-# 转换为SCE对象
-sce <- as.SingleCellExperiment.1CB(data)
+# 转换为SCE对象（需要指定基因名和细胞名列）
+# 函数会自动显示所有可用的列名供参考
+sce <- as.SingleCellExperiment.1CB(data,
+                                  rownames = "id",        # 基因名列
+                                  colnames = "cell_id")   # 细胞名列
 
 # 查看数据
 sce
@@ -302,10 +305,10 @@ data <- read1Cellbio("results.zip")
 
 # 3. 根据需要选择格式
 if (use_bioconductor) {
-  sce <- as.SingleCellExperiment.1CB(data)
+  sce <- as.SingleCellExperiment.1CB(data, rownames = "id", colnames = "cell_id")
   # Bioconductor分析...
 } else if (use_seurat) {
-  seurat <- as.Seurat.1CB(data)
+  seurat <- as.Seurat.1CB(data, rownames = "id", colnames = "cell_id")
   # Seurat分析...
 } else if (use_python) {
   iCellbio2H5ad("results.zip", "analysis.h5ad")

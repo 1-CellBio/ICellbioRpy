@@ -112,14 +112,24 @@ as.h5ad(data, "output.h5ad")
 #### 2. 1CellBio → Seurat（用于R分析）
 
 ```r
-# 读取并转换
+# 读取数据
 data <- read1Cellbio("path/to/1cellbio_results.zip")
-seurat_obj <- as.Seurat.1CB(data)
+
+# 转换为Seurat对象（需要指定基因名和细胞名列）
+# 函数会自动显示所有可用的列名供参考
+seurat_obj <- as.Seurat.1CB(data, 
+                           rownames = "id",        # 基因名列
+                           colnames = "cell_id")   # 细胞名列
 
 # 可视化
 library(Seurat)
 DimPlot(seurat_obj, reduction = "umap", group.by = "level1class")
 ```
+
+**💡 重要提示：**
+- `rownames` 和 `colnames` 参数是必填的
+- 如果不确定列名，调用函数时会自动显示所有可用选项
+- 如果有重复的名称，会自动添加后缀（如 Gene-1, Gene-2）
 
 #### 3. Seurat → H5AD（跨语言转换）
 
