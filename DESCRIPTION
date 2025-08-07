@@ -21,7 +21,8 @@ Imports:
     reticulate (<= 1.42.0),
     S4Vectors,
     SummarizedExperiment,
-    data.table
+    data.table,
+    R.utils
 Suggests:
     testthat,
     knitr,

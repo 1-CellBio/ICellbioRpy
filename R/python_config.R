@@ -69,7 +69,8 @@ configure_python_env <- function(python_path = NULL, conda_env = NULL, verbose =
       # anndata not available - provide helpful message
       warning("anndata module not found in current Python environment.\n",
               "Please install anndata or specify a conda environment that has anndata installed:\n",
-              "  configure_python_env(conda_env = \"your_env_name\")\n",
+              "  configure_python_env(conda_env = \"1cellbio\")  # For production use\n",
+              "  configure_python_env(conda_env = \"atlas\")     # For testing\n",
               "Or install anndata in your current environment:\n",
               "  pip install anndata")
       return(invisible(FALSE))

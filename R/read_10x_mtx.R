@@ -259,6 +259,35 @@ read_single_10x_sample <- function(mtx_file, features_file, barcodes_file,
   # Read barcodes file
   barcodes <- data.table::fread(barcodes_file, header = FALSE, data.table = FALSE)[, 1]
   
+  # Handle duplicate gene names
+  if (verbose) cat("  Checking for duplicate gene names...\n")
+  duplicate_genes <- duplicated(gene_symbols)
+  n_duplicates <- sum(duplicate_genes)
+  
+  if (n_duplicates > 0) {
+    if (verbose) {
+      cat("    Found", n_duplicates, "duplicate gene symbols\n")
+      cat("    Making gene names unique by appending gene IDs...\n")
+    }
+    
+    # Make gene symbols unique by combining with gene IDs for duplicates
+    unique_gene_symbols <- gene_symbols
+    duplicate_indices <- which(duplicated(gene_symbols) | duplicated(gene_symbols, fromLast = TRUE))
+    unique_gene_symbols[duplicate_indices] <- paste0(gene_symbols[duplicate_indices], "_", gene_ids[duplicate_indices])
+    
+    # Check if there are still duplicates after adding gene IDs
+    remaining_duplicates <- sum(duplicated(unique_gene_symbols))
+    if (remaining_duplicates > 0) {
+      if (verbose) cat("    Warning: Still", remaining_duplicates, "duplicates after adding gene IDs. Adding numeric suffix...\n")
+      unique_gene_symbols <- make.unique(unique_gene_symbols, sep = "_")
+    }
+    
+    gene_symbols <- unique_gene_symbols
+    if (verbose) cat("    ✓ Gene names made unique\n")
+  } else {
+    if (verbose) cat("    ✓ No duplicate gene names found\n")
+  }
+  
   # Create sparse matrix (genes x cells)
   if (verbose) cat("  Creating sparse matrix...\n")
   count_matrix <- Matrix::sparseMatrix(

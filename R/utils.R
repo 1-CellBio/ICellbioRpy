@@ -173,3 +173,19 @@ read_hdf5_dataframe <- function(file_path) {
   df <- data.frame(df_list)
   return(df)
 }
+
+
+#' Package startup message
+#' 
+#' @param libname Library name
+#' @param pkgname Package name
+.onAttach <- function(libname, pkgname) {
+  packageStartupMessage(
+    "====================================================================\n",
+    "欢迎使用1CellbioRpy！\n\n",
+    "重要提示：在使用本软件包之前，请先配置您的Python环境：\n",
+    " configure_python_env(conda_env = \"1cellbio\", verbose = TRUE)\n\n",
+    "请替换1cellbio到您的conda环境，确保所需的Python包（如anndata、pandas等）可用。\n",
+    "===================================================================="
+  )
+}
