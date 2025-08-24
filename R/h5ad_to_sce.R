@@ -30,7 +30,8 @@
 #' @importFrom SingleCellExperiment SingleCellExperiment
 #' @importFrom S4Vectors DataFrame
 #' @importFrom Matrix t
-h5ad_to_sce <- function(h5ad_file, use_x_as = "auto", verbose = TRUE) {
+h5ad_to_sce <- function(h5ad_file, use_x_as = "auto", name_conflict = c("make_unique", "error"), verbose = TRUE) {
+  name_conflict <- match.arg(name_conflict)
   
   # Check if required packages are available
   if (!requireNamespace("anndata", quietly = TRUE)) {
@@ -50,24 +51,27 @@ h5ad_to_sce <- function(h5ad_file, use_x_as = "auto", verbose = TRUE) {
     stop("File not found: ", h5ad_file)
   }
   
-  if (verbose) cat("Reading h5ad file:", h5ad_file, "\n")
+  if (verbose) cat(icb_i18n("读取 h5ad 文件:", "Reading h5ad file:"), h5ad_file, "\n")
   
-  # Configure Python environment using unified configuration
-  if (verbose) cat("Configuring Python environment...\n")
+  # Configure Python environment (REQUIRED)
   tryCatch({
-    configure_python_env(verbose = FALSE)
+    smart_python_config(verbose = verbose, interactive = FALSE)
   }, error = function(e) {
-    warning("Failed to configure Python environment: ", as.character(e$message))
-    warning("Please ensure anndata is installed in your Python environment or specify a conda environment:")
-    warning("  configure_python_env(conda_env = \"your_env_name\")")
-    stop("Python environment configuration failed")
+    stop(icb_i18n(
+      zh = paste0("Python环境配置失败: ", e$message, "\n",
+                 "请手动配置或安装所需环境:\n",
+                 "  smart_python_config(verbose = TRUE, interactive = TRUE)"),
+      en = paste0("Python environment configuration failed: ", e$message, "\n",
+                 "Please configure manually or install required environment:\n",
+                 "  smart_python_config(verbose = TRUE, interactive = TRUE)")
+    ))
   })
   
   # Read h5ad file using anndata package
   adata <- anndata::read_h5ad(h5ad_file)
   
   if (verbose) {
-    cat("Dataset dimensions:", adata$n_obs, "cells x", adata$n_vars, "genes\n")
+    cat(icb_i18n("数据维度:", "Dataset dimensions:"), adata$n_obs, icb_i18n("细胞 x", "cells x"), adata$n_vars, icb_i18n("基因\n", "genes\n"))
   }
   
   # Check if use_x_as is set to auto, then determine based on data characteristics
@@ -126,26 +130,26 @@ h5ad_to_sce <- function(h5ad_file, use_x_as = "auto", verbose = TRUE) {
   
   if (use_x_as == "logcounts") {
     # X matrix as logcounts, counts layer as counts
-    if (verbose) cat("Using X matrix as logcounts...\n")
-    assays_list[["logcounts"]] <- as(Matrix::t(adata$X), 'CsparseMatrix')
+    if (verbose) cat(icb_i18n("使用 X 作为 logcounts...\n", "Using X matrix as logcounts...\n"))
+    assays_list[["logcounts"]] <- icb_anndata_to_csparse(adata$X, transpose = TRUE, verbose = verbose)
     
     # Check if counts layer exists
     if ("counts" %in% names(adata$layers)) {
-      if (verbose) cat("Adding counts layer as counts assay...\n")
-      assays_list[["counts"]] <- as(Matrix::t(adata$layers[['counts']]), 'CsparseMatrix')
+      if (verbose) cat(icb_i18n("加入 counts 层作为 counts assay...\n", "Adding counts layer as counts assay...\n"))
+      assays_list[["counts"]] <- icb_anndata_to_csparse(adata$layers[['counts']], transpose = TRUE, verbose = verbose)
     } else {
-      if (verbose) cat("Warning: No 'counts' layer found, only logcounts will be available\n")
+      if (verbose) cat(icb_i18n("警告: 未找到 'counts' 层，仅提供 logcounts\n", "Warning: No 'counts' layer found, only logcounts will be available\n"))
     }
     
   } else if (use_x_as == "counts") {
     # X matrix as counts
-    if (verbose) cat("Using X matrix as counts...\n")
-    assays_list[["counts"]] <- as(Matrix::t(adata$X), 'CsparseMatrix')
+    if (verbose) cat(icb_i18n("使用 X 作为 counts...\n", "Using X matrix as counts...\n"))
+    assays_list[["counts"]] <- icb_anndata_to_csparse(adata$X, transpose = TRUE, verbose = verbose)
     
     # Check if logcounts layer exists
     if ("logcounts" %in% names(adata$layers)) {
-      if (verbose) cat("Adding logcounts layer as logcounts assay...\n")
-      assays_list[["logcounts"]] <- as(Matrix::t(adata$layers[['logcounts']]), 'CsparseMatrix')
+      if (verbose) cat(icb_i18n("加入 logcounts 层作为 logcounts assay...\n", "Adding logcounts layer as logcounts assay...\n"))
+      assays_list[["logcounts"]] <- icb_anndata_to_csparse(adata$layers[['logcounts']], transpose = TRUE, verbose = verbose)
     }
     
   } else {
@@ -155,10 +159,16 @@ h5ad_to_sce <- function(h5ad_file, use_x_as = "auto", verbose = TRUE) {
   # Prepare cell metadata (colData)
   if (verbose) cat("Processing cell metadata...\n")
   col_data <- S4Vectors::DataFrame(adata$obs)
+  if (!is.null(rownames(col_data))) {
+    rownames(col_data) <- icb_make_unique(rownames(col_data), strategy = name_conflict, sep = "-")
+  }
   
   # Prepare gene metadata (rowData)
   if (verbose) cat("Processing gene metadata...\n")
   row_data <- S4Vectors::DataFrame(adata$var)
+  if (!is.null(rownames(row_data))) {
+    rownames(row_data) <- icb_make_unique(rownames(row_data), strategy = name_conflict, sep = "-")
+  }
   
   # Prepare dimensionality reductions
   reduced_dims <- list()

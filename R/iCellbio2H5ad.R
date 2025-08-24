@@ -28,7 +28,10 @@
 #' iCellbio2H5ad("path/to/1Cellbio_results.zip", "output.h5ad", 
 #'               temp_dir = "/custom/temp/dir")
 #' }
-iCellbio2H5ad <- function(zip_path, h5ad_path, temp_dir = NULL, cleanup = TRUE) {
+iCellbio2H5ad <- function(zip_path, h5ad_path, temp_dir = NULL, cleanup = TRUE,
+                          overwrite = FALSE, 
+                          name_conflict = c("make_unique", "error"),
+                          verbose = TRUE) {
   # Check if required packages are available
   required_packages <- c("anndata", "reticulate", "jsonlite", "hdf5r", "Matrix")
   for (pkg in required_packages) {
@@ -37,20 +40,31 @@ iCellbio2H5ad <- function(zip_path, h5ad_path, temp_dir = NULL, cleanup = TRUE) 
     }
   }
   
+  name_conflict <- match.arg(name_conflict)
   # Check if zip file exists
   if (!file.exists(zip_path)) {
     stop("Zip file not found: ", zip_path)
   }
+  # Overwrite behavior
+  if (file.exists(h5ad_path) && !isTRUE(overwrite)) {
+    stop(icb_i18n(
+      zh = paste0("输出目标已存在：", h5ad_path, "。设置 overwrite=TRUE 以允许覆盖，或更换文件名。"),
+      en = paste0("Output file exists: ", h5ad_path, ". Set overwrite=TRUE to allow overwrite, or choose a new path.")
+    ))
+  }
   
-  # Configure Python environment using unified configuration
-  message("Configuring Python environment...")
+  # Configure Python environment (REQUIRED)
   tryCatch({
-    configure_python_env(verbose = FALSE)
+    smart_python_config(verbose = verbose, interactive = FALSE)
   }, error = function(e) {
-    warning("Failed to configure Python environment: ", as.character(e$message))
-    warning("Please ensure anndata is installed in your Python environment or specify a conda environment:")
-    warning("  configure_python_env(conda_env = \"your_env_name\")")
-    stop("Python environment configuration failed")
+    stop(icb_i18n(
+      zh = paste0("Python环境配置失败: ", e$message, "\n",
+                 "请手动配置或安装所需环境:\n",
+                 "  smart_python_config(verbose = TRUE, interactive = TRUE)"),
+      en = paste0("Python environment configuration failed: ", e$message, "\n",
+                 "Please configure manually or install required environment:\n",
+                 "  smart_python_config(verbose = TRUE, interactive = TRUE)")
+    ))
   })
   
   # Create temporary directory for extraction
@@ -110,13 +124,13 @@ iCellbio2H5ad <- function(zip_path, h5ad_path, temp_dir = NULL, cleanup = TRUE) 
   
   # Set row and column names
   if ("cell_id" %in% colnames(coldata_df)) {
-    rownames(coldata_df) <- coldata_df$cell_id
+    rownames(coldata_df) <- icb_make_unique(coldata_df$cell_id, strategy = name_conflict, sep = "-")
   } else {
     rownames(coldata_df) <- seq_len(nrow(coldata_df))
   }
   
   if ("id" %in% colnames(rowdata_df)) {
-    rownames(rowdata_df) <- rowdata_df$id
+    rownames(rowdata_df) <- icb_make_unique(rowdata_df$id, strategy = name_conflict, sep = "-")
   } else {
     rownames(rowdata_df) <- seq_len(nrow(rowdata_df))
   }

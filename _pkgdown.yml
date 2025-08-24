@@ -1,0 +1,116 @@
+url: https://1-cellbio.github.io/ICellbioRpy/
+template:
+  bootstrap: 5
+  theme: flatly
+  bslib:
+    primary: "#0073B7"
+    secondary: "#868e96"
+
+home:
+  title: ICellbioRpy
+  description: Convert 1CellBio Results to Seurat, SingleCellExperiment and H5AD formats
+
+navbar:
+  structure:
+    left: [home, reference, articles, tutorials, news]
+    right: [search, github]
+  components:
+    home:
+      icon: fa-home fa-lg
+      href: index.html
+    reference:
+      text: Reference
+      href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+        - text: Quick Start Guide
+          href: articles/quick-start.html
+        - text: Advanced Usage
+          href: articles/advanced-usage.html
+    tutorials:
+      text: Tutorials
+      menu:
+        - text: Environment Setup (macOS)
+          href: articles/tutorial-environment-setup-macos.html
+        - text: Environment Setup (Windows)
+          href: articles/tutorial-environment-setup-windows.html
+        - text: 1CellBio to H5AD
+          href: articles/tutorial-1cellbio-to-h5ad.html
+        - text: 1CellBio to Seurat
+          href: articles/tutorial-1cellbio-to-seurat.html
+        - text: Seurat to H5AD
+          href: articles/tutorial-seurat-to-h5ad.html
+        - text: 10X MTX Integration
+          href: articles/tutorial-10x-mtx-to-h5ad.html
+    github:
+      icon: fab-github fa-lg
+      href: https://github.com/1-Cellbio/ICellbioRpy
+
+reference:
+  - title: "Core Data Reading Functions"
+    desc: "Functions to read and parse 1CellBio results"
+    contents:
+      - read1Cellbio
+      - iCellbio2H5ad
+  
+  - title: "Conversion Functions"
+    desc: "Convert between different single-cell data formats"
+    contents:
+      - as.Seurat.1CB
+      - as.SingleCellExperiment.1CB
+      - h5ad_to_sce
+      - h5ad_to_seurat
+      - seurat_to_h5ad
+  
+  - title: "10X Data Integration"
+    desc: "Functions for multi-sample 10X data processing"
+    contents:
+      - read_10x_mtx_to_h5ad
+      - read_csv_sample_info
+      - read_single_10x_sample
+      - integrate_samples
+      - create_h5ad_from_integrated_data
+  
+  - title: "Environment Configuration"
+    desc: "Python environment setup and validation"
+    contents:
+      - configure_python_env
+      - check_anndata_available
+  
+  - title: "Utility Functions"
+    desc: "Helper functions for data processing"
+    contents:
+      - read_hdf5_sparse_matrix
+      - read_hdf5_matrix
+      - read_hdf5_dataframe
+      - construct_sparse_matrix
+
+articles:
+  - title: "Getting Started"
+    navbar: ~
+    contents:
+      - quick-start
+  
+  - title: "Advanced Topics"
+    navbar: ~
+    contents:
+      - advanced-usage
+  
+  - title: "Tutorials"
+    navbar: ~
+    contents:
+      - tutorial-environment-setup-macos
+      - tutorial-environment-setup-windows
+      - tutorial-1cellbio-to-h5ad
+      - tutorial-1cellbio-to-seurat
+      - tutorial-seurat-to-h5ad
+      - tutorial-10x-mtx-to-h5ad
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with
+  components:
+    developed_by: "Developed by [1CellBio](https://www.1cellbio.com/)"
+    built_with: "Built with [pkgdown](https://pkgdown.r-lib.org/)"

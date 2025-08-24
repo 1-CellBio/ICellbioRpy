@@ -27,19 +27,20 @@
 #'
 #' @export
 #' @importFrom Seurat as.Seurat
-h5ad_to_seurat <- function(h5ad_file, use_x_as = "auto", verbose = TRUE) {
+h5ad_to_seurat <- function(h5ad_file, use_x_as = "auto", name_conflict = c("make_unique", "error"), verbose = TRUE) {
+  name_conflict <- match.arg(name_conflict)
   
   # Check if required packages are available
   if (!requireNamespace("Seurat", quietly = TRUE)) {
     stop("Package 'Seurat' is required but not installed. Please install it with: install.packages('Seurat')")
   }
   
-  if (verbose) cat("Converting h5ad to Seurat via SingleCellExperiment...\n")
+  if (verbose) cat(icb_i18n("通过 SingleCellExperiment 将 h5ad 转换为 Seurat...\n", "Converting h5ad to Seurat via SingleCellExperiment...\n"))
   
   # First convert to SingleCellExperiment
   sce <- h5ad_to_sce(h5ad_file, use_x_as = use_x_as, verbose = verbose)
   
-  if (verbose) cat("Converting SingleCellExperiment to Seurat...\n")
+  if (verbose) cat(icb_i18n("正在将 SingleCellExperiment 转换为 Seurat...\n", "Converting SingleCellExperiment to Seurat...\n"))
   
   # Check available assays and use the first one as default
   available_assays <- names(SummarizedExperiment::assays(sce))
@@ -51,9 +52,14 @@ h5ad_to_seurat <- function(h5ad_file, use_x_as = "auto", verbose = TRUE) {
   default_assay <- available_assays[1]
   
   # Create Seurat object with the available assay
+  counts_mat <- SummarizedExperiment::assay(sce, default_assay)
+  colnames(counts_mat) <- icb_make_unique(colnames(counts_mat), strategy = name_conflict, sep = "-")
+  rownames(counts_mat) <- icb_make_unique(rownames(counts_mat), strategy = name_conflict, sep = "-")
+  meta_df <- as.data.frame(SummarizedExperiment::colData(sce))
+  rownames(meta_df) <- icb_make_unique(rownames(meta_df), strategy = name_conflict, sep = "-")
   seurat_obj <- Seurat::CreateSeuratObject(
-    counts = SummarizedExperiment::assay(sce, default_assay),
-    meta.data = as.data.frame(SummarizedExperiment::colData(sce))
+    counts = counts_mat,
+    meta.data = meta_df
   )
   
   # Add other assays if available
@@ -83,12 +89,12 @@ h5ad_to_seurat <- function(h5ad_file, use_x_as = "auto", verbose = TRUE) {
   }
   
   if (verbose) {
-    cat("✓ Conversion to Seurat completed successfully!\n")
-    cat("Seurat object created with:\n")
-    cat("  - Assays:", paste(names(seurat_obj@assays), collapse = ", "), "\n")
-    cat("  - Metadata columns:", ncol(seurat_obj@meta.data), "\n")
+    cat("\u2713 ", icb_i18n("成功完成转换！\n", "Conversion to Seurat completed successfully!\n"), sep = "")
+    cat(icb_i18n("已创建 Seurat 对象，包含:\n", "Seurat object created with:\n"))
+    cat("  - ", icb_i18n("Assays:", "Assays:"), paste(names(seurat_obj@assays), collapse = ", "), "\n")
+    cat("  - ", icb_i18n("元数据列数:", "Metadata columns:"), ncol(seurat_obj@meta.data), "\n")
     if (length(seurat_obj@reductions) > 0) {
-      cat("  - Reductions:", paste(names(seurat_obj@reductions), collapse = ", "), "\n")
+      cat("  - ", icb_i18n("降维:", "Reductions:"), paste(names(seurat_obj@reductions), collapse = ", "), "\n")
     }
   }
   

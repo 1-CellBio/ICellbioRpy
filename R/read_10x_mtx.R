@@ -67,13 +67,18 @@ read_10x_mtx_to_h5ad <- function(csv_file,
     stop("Package 'anndata' is required but not installed")
   }
   
-  # Configure Python environment
-  if (verbose) cat("Configuring Python environment...\n")
+  # Configure Python environment (REQUIRED)
   tryCatch({
-    configure_python_env(verbose = FALSE)
+    smart_python_config(verbose = verbose, interactive = FALSE)
   }, error = function(e) {
-    warning("Failed to configure Python environment: ", as.character(e$message))
-    stop("Python environment configuration failed")
+    stop(icb_i18n(
+      zh = paste0("Python环境配置失败: ", e$message, "\n",
+                 "请手动配置或安装所需环境:\n",
+                 "  smart_python_config(verbose = TRUE, interactive = TRUE)"),
+      en = paste0("Python environment configuration failed: ", e$message, "\n",
+                 "Please configure manually or install required environment:\n",
+                 "  smart_python_config(verbose = TRUE, interactive = TRUE)")
+    ))
   })
   
   if (verbose) cat("Reading sample information from CSV file:", csv_file, "\n")

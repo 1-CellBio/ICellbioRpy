@@ -1,0 +1,181 @@
+---
+title: "Quick Start Guide"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quick Start Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+# ICellbioRpy Quick Start Guide
+
+ICellbioRpy is an R package that enables seamless conversion between 1CellBio results and popular single-cell analysis formats (Seurat, SingleCellExperiment, H5AD).
+
+## Installation
+
+```{r installation}
+# Install from GitHub
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+}
+devtools::install_github("1-Cellbio/ICellbioRpy")
+```
+
+## Setup
+
+### 1. Load the package
+
+```{r setup}
+library(ICellbioRpy)
+```
+
+### 2. Configure Python environment (REQUIRED)
+
+**⚠️ CRITICAL**: You MUST configure your Python environment before using ANY conversion functions. This step is mandatory and cannot be skipped:
+
+```{r python-config}
+# REQUIRED: Configure with your conda environment name
+configure_python_env(conda_env = "1cellbio", verbose = TRUE)
+
+# Replace "1cellbio" with your actual conda environment name
+# This environment must have anndata, pandas, and numpy installed
+```
+
+**Important notes:**
+- This configuration has timeout protection (30 seconds)
+- If configuration fails, all conversion functions will fail
+- Make sure your conda environment exists and has anndata installed
+- Run this command immediately after loading the package
+
+## Basic Usage
+
+### 1. Read 1CellBio Results
+
+```{r read-1cellbio}
+# Read 1CellBio ZIP file
+data <- read1Cellbio("path/to/your/1cellbio_results.zip")
+```
+
+### 2. Convert to Different Formats
+
+#### Convert to Seurat
+
+```{r to-seurat}
+# Convert to Seurat object
+# You need to specify which columns to use as gene and cell names
+seurat_obj <- as.Seurat.1CB(data, 
+                           rownames = "gene_id",    # column for gene names
+                           colnames = "cell_id")    # column for cell names
+```
+
+#### Convert to SingleCellExperiment
+
+```{r to-sce}
+# Convert to SingleCellExperiment object
+sce <- as.SingleCellExperiment.1CB(data, 
+                                  rownames = "gene_id", 
+                                  colnames = "cell_id")
+```
+
+#### Direct conversion to H5AD
+
+```{r to-h5ad}
+# Direct ZIP to H5AD conversion (memory efficient)
+iCellbio2H5ad(
+  zip_file = "path/to/your/1cellbio_results.zip",
+  h5ad_path = "output.h5ad",
+  rownames = "gene_id",
+  colnames = "cell_id"
+)
+```
+
+### 3. Reverse Conversions
+
+#### H5AD to Seurat
+
+```{r h5ad-to-seurat}
+# Convert H5AD file to Seurat object
+seurat_obj <- h5ad_to_seurat("data.h5ad")
+```
+
+#### H5AD to SingleCellExperiment
+
+```{r h5ad-to-sce}
+# Convert H5AD file to SingleCellExperiment
+sce <- h5ad_to_sce("data.h5ad")
+```
+
+#### Seurat to H5AD
+
+```{r seurat-to-h5ad}
+# Convert Seurat object to H5AD file
+seurat_to_h5ad(seurat_obj, "output.h5ad")
+```
+
+### 4. 10X Data Integration
+
+```{r 10x-integration}
+# Create sample information CSV
+sample_info <- data.frame(
+  Sample_id = c("sample1", "sample2"),
+  mtx_fns = c("sample1/matrix.mtx.gz", "sample2/matrix.mtx.gz"),
+  features_fns = c("sample1/features.tsv.gz", "sample2/features.tsv.gz"),
+  barcodes_fns = c("sample1/barcodes.tsv.gz", "sample2/barcodes.tsv.gz")
+)
+write.csv(sample_info, "samples.csv", row.names = FALSE)
+
+# Read and integrate multiple 10X samples
+read_10x_mtx_to_h5ad(
+  csv_file = "samples.csv",
+  output_h5ad = "integrated.h5ad",
+  min_counts_per_cell = 200
+)
+```
+
+## Key Features
+
+- **Memory Efficient**: Preserves sparse matrix format throughout conversions
+- **Multi-format Support**: Seamlessly convert between R and Python formats
+- **Batch Processing**: Integrate multiple 10X samples in one step
+- **Robust Error Handling**: Clear error messages and validation
+- **Multilingual Support**: Chinese and English documentation
+
+## Advanced Options
+
+### Name Conflict Resolution
+
+```{r name-conflicts}
+# Handle duplicate names automatically
+seurat_obj <- as.Seurat.1CB(data, 
+                           rownames = "gene_id", 
+                           colnames = "cell_id",
+                           name_conflict = "make_unique")  # or "error"
+```
+
+### Layer Selection
+
+```{r layer-selection}
+# Specify which data layer to use as main matrix
+sce <- h5ad_to_sce("data.h5ad", use_x_as = "counts")  # or "logcounts", "auto"
+```
+
+### Overwrite Control
+
+```{r overwrite}
+# Control file overwriting behavior
+seurat_to_h5ad(seurat_obj, "output.h5ad", overwrite = TRUE)
+```
+
+## Next Steps
+
+- Check out the [Advanced Usage](advanced-usage.html) guide for more complex workflows
+- Browse the [Function Reference](../reference/index.html) for detailed documentation
+- Follow the step-by-step [Tutorials](../index.html#tutorials) for specific use cases

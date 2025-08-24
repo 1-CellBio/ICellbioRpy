@@ -44,6 +44,8 @@ seurat_to_h5ad <- function(seurat_obj,
                           default_assay = "RNA",
                           layer = "data",
                           include_reductions = TRUE,
+                          overwrite = FALSE,
+                          name_conflict = c("make_unique", "error"),
                           verbose = TRUE) {
   
   # Check if required packages are available
@@ -59,18 +61,30 @@ seurat_to_h5ad <- function(seurat_obj,
     stop("Package 'anndata' is required but not installed")
   }
   
-  # Configure Python environment using unified configuration
-  if (verbose) cat("Configuring Python environment...\n")
+  # Configure Python environment (REQUIRED)
   tryCatch({
-    configure_python_env(verbose = FALSE)
+    smart_python_config(verbose = verbose, interactive = FALSE)
   }, error = function(e) {
-    warning("Failed to configure Python environment: ", as.character(e$message))
-    warning("Please ensure anndata is installed in your Python environment or specify a conda environment:")
-    warning("  configure_python_env(conda_env = \"your_env_name\")")
-    stop("Python environment configuration failed")
+    stop(icb_i18n(
+      zh = paste0("Python环境配置失败: ", e$message, "\n",
+                 "请手动配置或安装所需环境:\n",
+                 "  smart_python_config(verbose = TRUE, interactive = TRUE)"),
+      en = paste0("Python environment configuration failed: ", e$message, "\n",
+                 "Please configure manually or install required environment:\n",
+                 "  smart_python_config(verbose = TRUE, interactive = TRUE)")
+    ))
   })
   
-  if (verbose) cat("Converting Seurat object to h5ad format...\n")
+  if (verbose) cat(icb_i18n("正在将 Seurat 对象转换为 h5ad 格式...\n", "Converting Seurat object to h5ad format...\n"))
+
+  name_conflict <- match.arg(name_conflict)
+  # Overwrite behavior
+  if (file.exists(output_file) && !isTRUE(overwrite)) {
+    stop(icb_i18n(
+      zh = paste0("输出目标已存在：", output_file, "。设置 overwrite=TRUE 以允许覆盖，或更换文件名。"),
+      en = paste0("Output file exists: ", output_file, ". Set overwrite=TRUE to allow overwrite, or choose a new path.")
+    ))
+  }
   
   # Check if the specified assay exists
   if (!default_assay %in% names(seurat_obj@assays)) {
@@ -109,7 +123,7 @@ seurat_to_h5ad <- function(seurat_obj,
   }
   
   # Get cell metadata
-  if (verbose) cat("Extracting cell metadata...\n")
+  if (verbose) cat(icb_i18n("提取细胞元数据...\n", "Extracting cell metadata...\n"))
   cell_metadata <- seurat_obj@meta.data
   
   # Get gene names
@@ -123,8 +137,16 @@ seurat_to_h5ad <- function(seurat_obj,
     stringsAsFactors = FALSE
   )
   
-  if (verbose) cat("Creating AnnData object...\n")
+  if (verbose) cat(icb_i18n("创建 AnnData 对象...\n", "Creating AnnData object...\n"))
   
+  # Normalize names (conflict strategy)
+  if (!is.null(colnames(main_matrix))) {
+    colnames(main_matrix) <- icb_make_unique(colnames(main_matrix), strategy = name_conflict, sep = "-")
+  }
+  if (!is.null(rownames(main_matrix))) {
+    rownames(main_matrix) <- icb_make_unique(rownames(main_matrix), strategy = name_conflict, sep = "-")
+  }
+
   # Create AnnData object using anndata package
   adata <- anndata::AnnData(
     X = main_matrix,
@@ -134,7 +156,7 @@ seurat_to_h5ad <- function(seurat_obj,
   
   # Add other assays as layers
   if (length(seurat_obj@assays) > 1) {
-    if (verbose) cat("Adding additional assays as layers...\n")
+    if (verbose) cat(icb_i18n("添加其它 assay 到 layers...\n", "Adding additional assays as layers...\n"))
     
     for (assay_name in names(seurat_obj@assays)) {
       if (assay_name != default_assay) {
@@ -144,7 +166,7 @@ seurat_to_h5ad <- function(seurat_obj,
           if (!is.null(data_matrix) && nrow(data_matrix) > 0) {
             data_matrix <- Matrix::t(data_matrix)
             adata$layers[[paste0(assay_name, "_data")]] <- data_matrix
-            if (verbose) cat("Added layer:", paste0(assay_name, "_data"), "\n")
+            if (verbose) cat(icb_i18n("已添加层:", "Added layer:"), paste0(assay_name, "_data"), "\n")
           }
         }, error = function(e) {
           if (verbose) cat("Warning: Could not add", assay_name, "data layer:", as.character(e$message), "\n")
@@ -155,7 +177,7 @@ seurat_to_h5ad <- function(seurat_obj,
           if (!is.null(counts_matrix) && nrow(counts_matrix) > 0) {
             counts_matrix <- Matrix::t(counts_matrix)
             adata$layers[[paste0(assay_name, "_counts")]] <- counts_matrix
-            if (verbose) cat("Added layer:", paste0(assay_name, "_counts"), "\n")
+            if (verbose) cat(icb_i18n("已添加层:", "Added layer:"), paste0(assay_name, "_counts"), "\n")
           }
         }, error = function(e) {
           if (verbose) cat("Warning: Could not add", assay_name, "counts layer:", as.character(e$message), "\n")
@@ -172,7 +194,7 @@ seurat_to_h5ad <- function(seurat_obj,
       if (!is.null(counts_matrix) && nrow(counts_matrix) > 0) {
         counts_matrix <- Matrix::t(counts_matrix)
         adata$layers[["counts"]] <- counts_matrix
-        if (verbose) cat("Added counts layer from default assay\n")
+        if (verbose) cat(icb_i18n("已从默认 assay 添加 counts 层\n", "Added counts layer from default assay\n"))
       }
     }, error = function(e) {
       if (verbose) cat("Warning: Could not add counts layer:", as.character(e$message), "\n")
@@ -184,7 +206,7 @@ seurat_to_h5ad <- function(seurat_obj,
       if (!is.null(data_matrix) && nrow(data_matrix) > 0) {
         data_matrix <- Matrix::t(data_matrix)
         adata$layers[["logcounts"]] <- data_matrix
-        if (verbose) cat("Added logcounts layer from default assay\n")
+        if (verbose) cat(icb_i18n("已从默认 assay 添加 logcounts 层\n", "Added logcounts layer from default assay\n"))
       }
     }, error = function(e) {
       if (verbose) cat("Warning: Could not add logcounts layer:", as.character(e$message), "\n")
@@ -193,7 +215,7 @@ seurat_to_h5ad <- function(seurat_obj,
   
   # Add dimensionality reductions
   if (include_reductions && length(seurat_obj@reductions) > 0) {
-    if (verbose) cat("Adding dimensionality reductions...\n")
+    if (verbose) cat(icb_i18n("添加降维结果...\n", "Adding dimensionality reductions...\n"))
     
     for (reduction_name in names(seurat_obj@reductions)) {
       tryCatch({
@@ -211,7 +233,7 @@ seurat_to_h5ad <- function(seurat_obj,
   }
   
   # Write to h5ad file
-  if (verbose) cat("Writing to h5ad file:", output_file, "\n")
+  if (verbose) cat(icb_i18n("写入 h5ad 文件:", "Writing to h5ad file:"), output_file, "\n")
   adata$write_h5ad(output_file)
   
   if (verbose) {

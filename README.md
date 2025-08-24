@@ -129,7 +129,7 @@ DimPlot(seurat_obj, reduction = "umap", group.by = "level1class")
 **💡 重要提示：**
 - `rownames` 和 `colnames` 参数是必填的
 - 如果不确定列名，调用函数时会自动显示所有可用选项
-- 如果有重复的名称，会自动添加后缀（如 Gene-1, Gene-2）
+- 如遇到重复名称，默认会自动添加后缀（如 Gene-1, Gene-2）。若希望在名称冲突时直接报错，可在相关函数中设置 `name_conflict = "error"`。
 
 #### 3. Seurat → H5AD（跨语言转换）
 
@@ -141,7 +141,9 @@ seurat_to_h5ad(seurat_obj, "output.h5ad")
 seurat_to_h5ad(seurat_obj, "output.h5ad",
                default_assay = "RNA",
                layer = "data",
-               include_reductions = TRUE)
+               include_reductions = TRUE,
+               overwrite = FALSE,                  # 若目标存在，默认拒绝覆盖（可设TRUE允许）
+               name_conflict = "make_unique")     # 基因/细胞命名冲突策略: make_unique|error
 ```
 
 #### 4. 10X MTX → H5AD（多样本整合）

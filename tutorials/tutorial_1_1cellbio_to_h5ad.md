@@ -110,7 +110,9 @@ output_h5ad_path <- "1cellbio_data.h5ad"
 iCellbio2H5ad(
   zip_path = zip_file_path,
   h5ad_path = output_h5ad_path,
-  verbose = TRUE  # 显示详细进度信息
+  overwrite = FALSE,              # 新增：默认不覆盖已存在文件
+  name_conflict = "make_unique",  # 新增：命名冲突策略（或设为 "error"）
+  verbose = TRUE                  # 显示详细进度信息
 )
 ```
 

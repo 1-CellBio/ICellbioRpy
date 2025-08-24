@@ -175,6 +175,132 @@ read_hdf5_dataframe <- function(file_path) {
 }
 
 
+#' Return package language option
+#'
+#' @keywords internal
+icb_get_lang <- function() {
+  lang <- getOption("ICellbioRpy.lang", default = "en")
+  if (!lang %in% c("zh", "en")) lang <- "en"
+  lang
+}
+
+#' Simple i18n helper
+#'
+#' @param zh Chinese message
+#' @param en English message
+#' @keywords internal
+icb_i18n <- function(zh, en) {
+  if (identical(icb_get_lang(), "zh")) zh else en
+}
+
+#' Ensure a matrix is CsparseMatrix
+#'
+#' @param x A matrix-like object (dense or sparse)
+#' @return CsparseMatrix
+#' @keywords internal
+to_csparse <- function(x) {
+  if (inherits(x, "sparseMatrix")) {
+    return(methods::as(x, "CsparseMatrix"))
+  }
+  # Convert dense to sparse preserving type
+  Matrix::Matrix(x, sparse = TRUE)
+}
+
+#' Check if a Python object is scipy.sparse matrix
+#'
+#' @keywords internal
+icb_is_py_sparse <- function(py_obj) {
+  if (!requireNamespace("reticulate", quietly = TRUE)) return(FALSE)
+  if (is.null(py_obj)) return(FALSE)
+  sparse <- tryCatch(reticulate::import("scipy.sparse", convert = FALSE), error = function(e) NULL)
+  if (is.null(sparse)) return(FALSE)
+  is_csr <- tryCatch(sparse$isspmatrix_csr(py_obj), error = function(e) FALSE)
+  is_csc <- tryCatch(sparse$isspmatrix_csc(py_obj), error = function(e) FALSE)
+  is_csr || is_csc
+}
+
+#' Convert scipy.sparse (CSR/CSC) to dgCMatrix efficiently
+#'
+#' @keywords internal
+icb_py_sparse_to_dgc <- function(py_obj) {
+  sparse <- reticulate::import("scipy.sparse", convert = FALSE)
+  if (sparse$isspmatrix_csr(py_obj)) {
+    shape <- reticulate::py_to_r(py_obj$shape)
+    indptr <- reticulate::py_to_r(py_obj$indptr)
+    indices <- reticulate::py_to_r(py_obj$indices)
+    data <- reticulate::py_to_r(py_obj$data)
+    n_rows <- as.integer(shape[[1]])
+    n_cols <- as.integer(shape[[2]])
+    i <- rep.int(seq_len(n_rows), diff(indptr))
+    j <- as.integer(indices) + 1L
+    Matrix::sparseMatrix(i = i, j = j, x = as.numeric(data), dims = c(n_rows, n_cols))
+  } else if (sparse$isspmatrix_csc(py_obj)) {
+    shape <- reticulate::py_to_r(py_obj$shape)
+    indptr <- reticulate::py_to_r(py_obj$indptr)
+    indices <- reticulate::py_to_r(py_obj$indices)
+    data <- reticulate::py_to_r(py_obj$data)
+    n_rows <- as.integer(shape[[1]])
+    n_cols <- as.integer(shape[[2]])
+    j <- rep.int(seq_len(n_cols), diff(indptr))
+    i <- as.integer(indices) + 1L
+    Matrix::sparseMatrix(i = i, j = j, x = as.numeric(data), dims = c(n_rows, n_cols))
+  } else {
+    stop(icb_i18n("不支持的稀疏矩阵类型", "Unsupported scipy.sparse matrix type"))
+  }
+}
+
+#' Robustly obtain CsparseMatrix from AnnData matrix/layer
+#'
+#' @param obj Anndata matrix-like (possibly Python object)
+#' @param transpose Whether to transpose after conversion
+#' @param verbose Whether to print diagnostic
+#' @keywords internal
+icb_anndata_to_csparse <- function(obj, transpose = FALSE, verbose = FALSE) {
+  # Fast path for R matrices
+  if (inherits(obj, "sparseMatrix") || is.matrix(obj)) {
+    mat <- to_csparse(obj)
+    return(if (transpose) methods::as(Matrix::t(mat), "CsparseMatrix") else mat)
+  }
+  # Python sparse path
+  if (icb_is_py_sparse(obj)) {
+    mat <- icb_py_sparse_to_dgc(obj)
+    return(if (transpose) methods::as(Matrix::t(mat), "CsparseMatrix") else mat)
+  }
+  # Fallback: try convert to R and then to sparse
+  if (requireNamespace("reticulate", quietly = TRUE)) {
+    conv <- tryCatch(reticulate::py_to_r(obj), error = function(e) NULL)
+    if (!is.null(conv)) {
+      if (inherits(conv, "sparseMatrix") || is.matrix(conv)) {
+        mat <- to_csparse(conv)
+        return(if (transpose) methods::as(Matrix::t(mat), "CsparseMatrix") else mat)
+      }
+    }
+  }
+  stop(icb_i18n("无法从 AnnData 对象提取矩阵", "Failed to extract matrix from AnnData object"))
+}
+
+#' Make names unique or error
+#'
+#' @param names Character vector
+#' @param strategy One of "make_unique" (default) or "error"
+#' @param sep Suffix separator when making unique
+#' @keywords internal
+icb_make_unique <- function(names, strategy = c("make_unique", "error"), sep = "-") {
+  strategy <- match.arg(strategy)
+  if (strategy == "make_unique") {
+    return(base::make.unique(as.character(names), sep = sep))
+  }
+  # error strategy
+  if (anyDuplicated(names)) {
+    dups <- unique(names[duplicated(names)])
+    stop(icb_i18n(
+      zh = paste0("检测到重复名称: ", paste(utils::head(dups, 10), collapse = ", "), if (length(dups) > 10) " ..." else "", "。请调整输入或改用 name_conflict='make_unique'。"),
+      en = paste0("Duplicate names detected: ", paste(utils::head(dups, 10), collapse = ", "), if (length(dups) > 10) " ..." else "", ". Please adjust input or set name_conflict='make_unique'.")
+    ))
+  }
+  as.character(names)
+}
+
 #' Package startup message
 #' 
 #' @param libname Library name
@@ -182,10 +308,10 @@ read_hdf5_dataframe <- function(file_path) {
 .onAttach <- function(libname, pkgname) {
   packageStartupMessage(
     "====================================================================\n",
-    "欢迎使用1CellbioRpy！\n\n",
-    "重要提示：在使用本软件包之前，请先配置您的Python环境：\n",
-    " configure_python_env(conda_env = \"1cellbio\", verbose = TRUE)\n\n",
-    "请替换1cellbio到您的conda环境，确保所需的Python包（如anndata、pandas等）可用。\n",
+    icb_i18n(
+      zh = "欢迎使用ICellbioRpy！\n\n🚀 智能Python环境配置：\n smart_python_config(verbose = TRUE, interactive = TRUE)\n\n此命令将自动检测可用的conda环境并提示您选择。\n首次使用时请运行此命令以配置Python环境。\n\n💡 手动配置（高级用户）：\n configure_python_env(conda_env = \"your_env\", verbose = TRUE)\n",
+      en = "Welcome to ICellbioRpy!\n\n🚀 Smart Python environment configuration:\n smart_python_config(verbose = TRUE, interactive = TRUE)\n\nThis command will auto-detect available conda environments and prompt you to choose.\nPlease run this command on first use to configure Python environment.\n\n💡 Manual configuration (advanced users):\n configure_python_env(conda_env = \"your_env\", verbose = TRUE)\n"
+    ),
     "===================================================================="
   )
 }

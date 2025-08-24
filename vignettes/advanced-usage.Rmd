@@ -1,0 +1,324 @@
+---
+title: "Advanced Usage"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Advanced Usage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+# Advanced Usage
+
+This guide covers advanced features and workflows for power users of ICellbioRpy.
+
+## Multi-Language Support
+
+ICellbioRpy supports both English and Chinese interfaces:
+
+```{r language-config}
+# Set language to Chinese
+options(ICellbioRpy.lang = "zh")
+
+# Set language to English (default)
+options(ICellbioRpy.lang = "en")
+```
+
+## Large Dataset Optimization
+
+### Memory-Efficient Conversions
+
+For large datasets, use these strategies to minimize memory usage:
+
+```{r memory-efficient}
+# Use direct ZIP to H5AD conversion (bypasses R objects)
+iCellbio2H5ad(
+  zip_file = "large_dataset.zip",
+  h5ad_path = "output.h5ad",
+  rownames = "gene_id",
+  colnames = "cell_id"
+)
+
+# Specify data type detection for optimal performance
+sce <- h5ad_to_sce("large_data.h5ad", use_x_as = "auto")
+```
+
+### Handling Multiple Assays
+
+```{r multi-assays}
+# Convert Seurat object with multiple assays
+seurat_to_h5ad(
+  seurat_obj, 
+  "output.h5ad",
+  default_assay = "RNA",           # Main assay for X matrix
+  layer = "data",                  # Use normalized data
+  include_reductions = TRUE        # Include PCA, UMAP, etc.
+)
+
+# All other assays will be stored as layers in the H5AD file
+```
+
+## Batch Processing Workflows
+
+### Processing Multiple 1CellBio Files
+
+```{r batch-1cellbio}
+# Function to process multiple ZIP files
+process_multiple_1cellbio <- function(zip_files, output_dir) {
+  for (zip_file in zip_files) {
+    # Extract sample name from filename
+    sample_name <- tools::file_path_sans_ext(basename(zip_file))
+    output_h5ad <- file.path(output_dir, paste0(sample_name, ".h5ad"))
+    
+    # Convert to H5AD
+    iCellbio2H5ad(
+      zip_file = zip_file,
+      h5ad_path = output_h5ad,
+      rownames = "gene_id",
+      colnames = "cell_id"
+    )
+  }
+}
+
+# Usage
+zip_files <- list.files("input_dir", pattern = "\\.zip$", full.names = TRUE)
+process_multiple_1cellbio(zip_files, "output_h5ad")
+```
+
+### Advanced 10X Integration
+
+```{r advanced-10x}
+# Create detailed sample metadata
+sample_info <- data.frame(
+  Sample_id = c("ctrl_1", "ctrl_2", "treat_1", "treat_2"),
+  condition = c("control", "control", "treatment", "treatment"),
+  batch = c("batch1", "batch2", "batch1", "batch2"),
+  mtx_fns = c("ctrl1/matrix.mtx.gz", "ctrl2/matrix.mtx.gz", 
+              "treat1/matrix.mtx.gz", "treat2/matrix.mtx.gz"),
+  features_fns = c("ctrl1/features.tsv.gz", "ctrl2/features.tsv.gz",
+                   "treat1/features.tsv.gz", "treat2/features.tsv.gz"),
+  barcodes_fns = c("ctrl1/barcodes.tsv.gz", "ctrl2/barcodes.tsv.gz",
+                   "treat1/barcodes.tsv.gz", "treat2/barcodes.tsv.gz")
+)
+
+# Integrate with custom QC thresholds
+read_10x_mtx_to_h5ad(
+  csv_file = "detailed_samples.csv",
+  output_h5ad = "integrated_with_metadata.h5ad",
+  min_counts_per_cell = 500,  # Stricter QC
+  verbose = TRUE
+)
+```
+
+## Error Handling and Troubleshooting
+
+### Robust File Processing
+
+```{r error-handling}
+# Safe conversion with error handling
+safe_convert_to_h5ad <- function(zip_file, output_file) {
+  tryCatch({
+    iCellbio2H5ad(
+      zip_file = zip_file,
+      h5ad_path = output_file,
+      rownames = "gene_id",
+      colnames = "cell_id",
+      overwrite = TRUE
+    )
+    message("✓ Successfully converted: ", basename(zip_file))
+  }, error = function(e) {
+    warning("✗ Failed to convert ", basename(zip_file), ": ", e$message)
+    return(NULL)
+  })
+}
+```
+
+### Name Conflict Strategies
+
+```{r name-conflicts-advanced}
+# Strict mode - error on duplicates
+tryCatch({
+  seurat_obj <- as.Seurat.1CB(
+    data, 
+    rownames = "gene_id", 
+    colnames = "cell_id",
+    name_conflict = "error"
+  )
+}, error = function(e) {
+  message("Duplicate names detected, switching to make_unique mode")
+  seurat_obj <- as.Seurat.1CB(
+    data, 
+    rownames = "gene_id", 
+    colnames = "cell_id",
+    name_conflict = "make_unique"
+  )
+})
+```
+
+## Environment Management
+
+### Multiple Python Environments
+
+```{r multi-python-env}
+# Configure specific environment for different projects
+configure_python_env(conda_env = "scanpy_env", verbose = TRUE)
+
+# Switch environments mid-session if needed
+configure_python_env(conda_env = "another_env", verbose = TRUE)
+
+# Check current environment status
+check_anndata_available()
+```
+
+### Environment Validation
+
+```{r env-validation}
+# Comprehensive environment check
+validate_environment <- function() {
+  cat("=== Environment Validation ===\n")
+  
+  # Check Python configuration
+  cat("Python environment: ")
+  if (check_anndata_available()) {
+    cat("✓ OK\n")
+  } else {
+    cat("✗ Failed\n")
+    cat("Please run: configure_python_env(conda_env = 'your_env')\n")
+    return(FALSE)
+  }
+  
+  # Check required R packages
+  required_packages <- c("Matrix", "Seurat", "SingleCellExperiment")
+  for (pkg in required_packages) {
+    cat("R package", pkg, ": ")
+    if (requireNamespace(pkg, quietly = TRUE)) {
+      cat("✓ OK\n")
+    } else {
+      cat("✗ Missing\n")
+    }
+  }
+  
+  return(TRUE)
+}
+
+# Run validation
+validate_environment()
+```
+
+## Performance Optimization
+
+### Sparse Matrix Best Practices
+
+```{r sparse-optimization}
+# Monitor memory usage during conversion
+monitor_conversion <- function(input_file, output_file) {
+  start_time <- Sys.time()
+  start_memory <- gc()
+  
+  # Perform conversion
+  result <- h5ad_to_seurat(input_file, verbose = TRUE)
+  
+  end_time <- Sys.time()
+  end_memory <- gc()
+  
+  cat("Conversion completed in:", 
+      round(difftime(end_time, start_time, units = "secs"), 2), "seconds\n")
+  
+  return(result)
+}
+```
+
+## Integration with Other Packages
+
+### Scanpy Integration
+
+```{r scanpy-integration}
+# After creating H5AD file, use with scanpy
+# This would be run in Python:
+# 
+# import scanpy as sc
+# adata = sc.read_h5ad("output.h5ad")
+# sc.pp.highly_variable_genes(adata)
+# sc.tl.pca(adata)
+# sc.pl.pca_variance_ratio(adata)
+```
+
+### Bioconductor Integration
+
+```{r bioconductor}
+# Convert to SingleCellExperiment for Bioconductor workflows
+sce <- h5ad_to_sce("data.h5ad")
+
+# Use with scater, scran, etc.
+# library(scater)
+# sce <- addPerCellQC(sce)
+# plotColData(sce, "total")
+```
+
+## Custom Workflows
+
+### Building Analysis Pipelines
+
+```{r custom-pipeline}
+# Complete analysis pipeline
+run_1cellbio_pipeline <- function(zip_file, output_dir, analysis_type = "seurat") {
+  # Step 1: Convert to H5AD
+  h5ad_file <- file.path(output_dir, "data.h5ad")
+  iCellbio2H5ad(zip_file, h5ad_file, 
+                rownames = "gene_id", colnames = "cell_id")
+  
+  # Step 2: Convert to analysis format
+  if (analysis_type == "seurat") {
+    obj <- h5ad_to_seurat(h5ad_file)
+    saveRDS(obj, file.path(output_dir, "seurat_object.rds"))
+  } else if (analysis_type == "sce") {
+    obj <- h5ad_to_sce(h5ad_file)
+    saveRDS(obj, file.path(output_dir, "sce_object.rds"))
+  }
+  
+  return(obj)
+}
+```
+
+## Troubleshooting Common Issues
+
+### Issue 1: Python Environment Problems
+
+```{r troubleshoot-python}
+# If you get "anndata not found" errors:
+# 1. Check your conda environments:
+system("conda env list")
+
+# 2. Activate the correct environment and install anndata:
+# conda activate your_env
+# pip install anndata
+
+# 3. Reconfigure in R:
+configure_python_env(conda_env = "your_env", verbose = TRUE)
+```
+
+### Issue 2: Memory Issues with Large Files
+
+```{r troubleshoot-memory}
+# For very large files, use direct conversion:
+# Avoid: data -> Seurat -> H5AD
+# Use: ZIP -> H5AD directly
+iCellbio2H5ad(zip_file, h5ad_file, rownames = "gene_id", colnames = "cell_id")
+```
+
+### Issue 3: Duplicate Names
+
+```{r troubleshoot-names}
+# Always use make_unique for robustness:
+obj <- as.Seurat.1CB(data, 
+                     rownames = "gene_id", 
+                     colnames = "cell_id",
+                     name_conflict = "make_unique")
+```

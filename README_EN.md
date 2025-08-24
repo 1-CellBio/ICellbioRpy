@@ -129,7 +129,7 @@ DimPlot(seurat_obj, reduction = "umap", group.by = "level1class")
 **💡 Important Notes:**
 - `rownames` and `colnames` parameters are required
 - If unsure about column names, the function will automatically display all available options when called
-- Duplicate names will be automatically suffixed (e.g., Gene-1, Gene-2)
+- When duplicate names are present, the default behavior is to automatically make them unique (e.g., Gene-1, Gene-2). If you prefer a strict error on name conflicts, set `name_conflict = "error"` where available.
 
 #### 3. Seurat → H5AD (cross-language conversion)
 
@@ -141,7 +141,9 @@ seurat_to_h5ad(seurat_obj, "output.h5ad")
 seurat_to_h5ad(seurat_obj, "output.h5ad",
                default_assay = "RNA",
                layer = "data",
-               include_reductions = TRUE)
+               include_reductions = TRUE,
+               overwrite = FALSE,                  # refuse overwrite by default (set TRUE to allow)
+               name_conflict = "make_unique")     # naming conflict strategy: make_unique|error
 ```
 
 #### 4. 10X MTX → H5AD (multi-sample integration)

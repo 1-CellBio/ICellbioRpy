@@ -72,12 +72,14 @@ data <- read1Cellbio("path/to/your/1cellbio_results.zip")
 seurat_obj <- as.Seurat.1CB(data)
 ```
 
-### 3. Seurat → H5AD
+### 3. Seurat → H5AD（含覆盖与命名冲突控制）
 ```r
 # 转换Seurat对象
 seurat_to_h5ad(
   seurat_obj = your_seurat_object,
-  output_file = "seurat_data.h5ad"
+  output_file = "seurat_data.h5ad",
+  overwrite = FALSE,              # 默认不覆盖已存在文件
+  name_conflict = "make_unique"   # 或设置为 "error" 以在命名冲突时报错
 )
 ```
 

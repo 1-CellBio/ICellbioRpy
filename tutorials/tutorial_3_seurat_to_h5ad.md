@@ -197,19 +197,25 @@ seurat_to_h5ad(
   default_assay = "RNA",           # 使用RNA assay作为主要数据
   layer = "data",                  # 使用标准化数据作为主矩阵
   include_reductions = TRUE,       # 包含降维结果
+  overwrite = FALSE,               # 新增：默认不覆盖已存在文件
+  name_conflict = "make_unique",  # 新增：命名冲突策略（或设为 "error"）
   verbose = TRUE                   # 显示详细进度
 )
 
 cat("✓ 转换完成！\n")
 ```
 
-**🔍 参数详解:**
+**🔍 参数详解（更新）:**
 
 - **default_assay**: 指定哪个assay作为主要数据源
 - **layer**: 
   - `"data"`: 标准化后的数据（推荐）
   - `"counts"`: 原始计数数据
 - **include_reductions**: 是否包含PCA、UMAP等降维结果
+- **overwrite**: 若输出文件已存在，`FALSE`（默认）时报错并拒绝覆盖；设为 `TRUE` 允许覆盖
+- **name_conflict**: 当细胞/基因名称有重复时的处理策略：
+  - `"make_unique"`（默认）：自动添加后缀保证名称唯一
+  - `"error"`：发现冲突即报错，提醒用户显式处理
 - **verbose**: 显示转换过程的详细信息
 
 ## 第6步: 验证转换结果

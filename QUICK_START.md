@@ -157,8 +157,13 @@ names(seurat@reductions)
 ### 从R对象到h5ad
 
 ```r
-# Seurat → h5ad
-seurat_to_h5ad(seurat_object, "seurat_output.h5ad")
+# Seurat → h5ad（新增覆盖与命名冲突控制）
+seurat_to_h5ad(
+  seurat_object,
+  "seurat_output.h5ad",
+  overwrite = FALSE,              # 默认不覆盖已存在文件
+  name_conflict = "make_unique"   # 或设置为 "error" 以在命名冲突时报错
+)
 
 # 验证转换
 file.exists("seurat_output.h5ad")

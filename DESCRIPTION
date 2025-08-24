@@ -1,31 +1,37 @@
 Package: ICellbioRpy
 Type: Package
-Title: Read and Convert 1Cellbio Results to Seurat or SingleCellExperiment
-Version: 0.1.0
-Author: Your Name
-Maintainer: Your Name <your@email.com>
-Description: This package provides functions to read 1Cellbio pipeline results directly from zip files and convert them to Seurat or SingleCellExperiment objects for downstream analysis.
+Title: Read and Convert 1CellBio Results to Seurat, SingleCellExperiment and H5AD
+Version: 0.2.0
+Authors@R: 
+    c(
+      person("1Cellbio", "X", email = "your@email",
+             role = c("aut"))
+    )
+URL: https://github.com/1-Cellbio/ICellbioRpy
+BugReports: https://github.com/1-Cellbio/ICellbioRpy/issues
+Description: Tools to convert 1CellBio results (ZIP) to Seurat, SingleCellExperiment, and H5AD formats, and interconvert between R and Python single-cell formats with memory-efficient sparse matrix preservation.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Imports:
-    SingleCellExperiment,
-    Seurat,
-    hdf5r,
-    jsonlite,
+    SingleCellExperiment (>= 1.24.0),
+    Seurat (>= 4.3.0),
+    hdf5r (>= 1.3.8),
+    jsonlite (>= 1.8.0),
     methods,
     utils,
-    Matrix,
-    anndata,
+    Matrix (>= 1.5.0),
+    anndata (>= 0.8.0),
     reticulate (<= 1.42.0),
-    S4Vectors,
-    SummarizedExperiment,
-    data.table,
-    R.utils
+    S4Vectors (>= 0.38.0),
+    SummarizedExperiment (>= 1.30.0),
+    data.table (>= 1.14.0),
+    R.utils (>= 2.12.0)
 Suggests:
     testthat,
     knitr,
     rmarkdown
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
+SystemRequirements: Python (>= 3.8), anndata (>= 0.9)

@@ -52,85 +52,15 @@ read1Cellbio <- function(file_path) {
   return(data)
 }
 
-#' Read a sparse matrix from HDF5 file
-#'
-#' @param file_path Path to the HDF5 file
-#' @return A sparse matrix
+## Delegates to utils.R authoritative implementations
 #' @export
 read_hdf5_sparse_matrix <- function(file_path) {
-  h5_file <- hdf5r::H5File$new(file_path, mode = "r")
-  on.exit(h5_file$close())
-  
-  data <- h5_file[["matrix/data"]][]
-  indices <- h5_file[["matrix/indices"]][]
-  indptr <- h5_file[["matrix/indptr"]][]
-  shape <- h5_file[["matrix/shape"]][]
-  
-  # Create a sparse matrix using Matrix package
-  # In 10x format:
-  # - indices contains 0-based row indices of non-zero elements
-  # - indptr contains column pointers (0-based), length is (ncol + 1)
-  # - data contains the non-zero values
-  
-  # Create i (row indices) from indices vector
-  i <- indices + 1  # Convert to 1-based indexing for R
-  
-  # Create j (column indices) from indptr
-  j <- rep(seq_len(shape[2]), diff(indptr))  # This creates the column indices for each element
-  
-  # Create the sparse matrix
-  mat <- Matrix::sparseMatrix(
-    i = i,
-    j = j,
-    x = data,
-    dims = shape
-  )
-  
-  return(mat)
+  utils::getFromNamespace("read_hdf5_sparse_matrix", ns = asNamespace("ICellbioRpy"))(file_path)
 }
 
-#' Read a dataframe from HDF5 file
-#'
-#' @param file_path Path to the HDF5 file
-#' @return A data frame
-#' @export
+##' @export
 read_hdf5_dataframe <- function(file_path) {
-  h5_file <- hdf5r::H5File$new(file_path, mode = "r")
-  on.exit(h5_file$close())
-  
-  # Get column names from the correct location
-  if ("data/column_names" %in% h5_file$ls(recursive = TRUE)$name) {
-    names <- h5_file[["data/column_names"]][]
-  } else {
-    stop("Cannot find column names in HDF5 file: ", file_path)
-  }
-  
-  # Read each column from the data group
-  columns <- list()
-  if ("data/data" %in% h5_file$ls(recursive = TRUE)$name) {
-    data_group <- h5_file[["data/data"]]
-    # List all datasets in the data group
-    data_datasets <- data_group$ls()
-    
-    # Read each dataset
-    for (i in seq_along(names)) {
-      # Datasets are named with indices starting from 0
-      dataset_name <- as.character(i - 1)
-      if (dataset_name %in% data_datasets$name) {
-        columns[[names[i]]] <- data_group[[dataset_name]][]
-      } else {
-        warning("Dataset ", dataset_name, " not found for column ", names[i])
-        columns[[names[i]]] <- rep(NA, 10)  # Placeholder
-      }
-    }
-  } else {
-    stop("Cannot find data group in HDF5 file: ", file_path)
-  }
-  
-  # Create a data frame
-  df <- data.frame(columns, check.names = FALSE)
-  
-  return(df)
+  utils::getFromNamespace("read_hdf5_dataframe", ns = asNamespace("ICellbioRpy"))(file_path)
 }
 
 #' Helper function to make unique names
@@ -144,15 +74,20 @@ make_unique_names <- function(names) {
   return(names)
 }
 
-#' Convert 1CellbioData to Seurat object
+#' Convert 1CellbioData to Seurat object (DEPRECATED)
 #'
 #' @param object A 1CellbioData object
 #' @param rownames Character string specifying the column name in row data to use as gene names (required)
 #' @param colnames Character string specifying the column name in column data to use as cell names (required)
 #' @param ... Additional arguments (not used)
 #' @return A Seurat object
-#' @export
-as.Seurat.1CellbioData <- function(object, rownames = NULL, colnames = NULL, ...) {
+#' @keywords internal
+as.Seurat.1CellbioData <- function(object, rownames = NULL, colnames = NULL, ..., name_conflict = c("make_unique", "error")) {
+  name_conflict <- match.arg(name_conflict)
+  message(icb_i18n(
+    zh = "提示: 函数 as.Seurat.1CellbioData 已废弃，请改用 as.Seurat.1CB。",
+    en = "Note: Function as.Seurat.1CellbioData is deprecated, please use as.Seurat.1CB instead."
+  ))
   
   # Read metadata first to show available options
   cat("正在读取数据结构信息...\n")
@@ -196,8 +131,8 @@ as.Seurat.1CellbioData <- function(object, rownames = NULL, colnames = NULL, ...
   }
   
   # Set row and column names with uniqueness check
-  cell_names <- make_unique_names(as.character(coldata_df[[colnames]]))
-  gene_names <- make_unique_names(as.character(rowdata_df[[rownames]]))
+  cell_names <- icb_make_unique(as.character(coldata_df[[colnames]]), strategy = name_conflict, sep = "-")
+  gene_names <- icb_make_unique(as.character(rowdata_df[[rownames]]), strategy = name_conflict, sep = "-")
   
   rownames(coldata_df) <- cell_names
   rownames(rowdata_df) <- gene_names
@@ -269,15 +204,20 @@ as.Seurat.1CellbioData <- function(object, rownames = NULL, colnames = NULL, ...
   return(seurat_obj)
 }
 
-#' Convert 1CellbioData to SingleCellExperiment object
+#' Convert 1CellbioData to SingleCellExperiment object (DEPRECATED)
 #'
 #' @param object A 1CellbioData object
 #' @param rownames Character string specifying the column name in row data to use as gene names (required)
 #' @param colnames Character string specifying the column name in column data to use as cell names (required)
 #' @param ... Additional arguments (not used)
 #' @return A SingleCellExperiment object
-#' @export
-as.SingleCellExperiment.1CellbioData <- function(object, rownames = NULL, colnames = NULL, ...) {
+#' @keywords internal
+as.SingleCellExperiment.1CellbioData <- function(object, rownames = NULL, colnames = NULL, ..., name_conflict = c("make_unique", "error")) {
+  name_conflict <- match.arg(name_conflict)
+  message(icb_i18n(
+    zh = "提示: 函数 as.SingleCellExperiment.1CellbioData 已废弃，请改用 as.SingleCellExperiment.1CB。",
+    en = "Note: Function as.SingleCellExperiment.1CellbioData is deprecated, please use as.SingleCellExperiment.1CB instead."
+  ))
   
   # Read metadata first to show available options
   cat("正在读取数据结构信息...\n")
@@ -321,8 +261,8 @@ as.SingleCellExperiment.1CellbioData <- function(object, rownames = NULL, colnam
   }
   
   # Set row and column names with uniqueness check
-  cell_names <- make_unique_names(as.character(coldata_df[[colnames]]))
-  gene_names <- make_unique_names(as.character(rowdata_df[[rownames]]))
+  cell_names <- icb_make_unique(as.character(coldata_df[[colnames]]), strategy = name_conflict, sep = "-")
+  gene_names <- icb_make_unique(as.character(rowdata_df[[rownames]]), strategy = name_conflict, sep = "-")
   
   rownames(coldata_df) <- cell_names
   rownames(rowdata_df) <- gene_names

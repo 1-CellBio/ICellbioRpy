@@ -154,8 +154,13 @@ names(seurat@reductions)
 ### From R Objects to h5ad
 
 ```r
-# Seurat → h5ad
-seurat_to_h5ad(seurat_object, "seurat_output.h5ad")
+# Seurat → h5ad (with overwrite and naming conflict control)
+seurat_to_h5ad(
+  seurat_object,
+  "seurat_output.h5ad",
+  overwrite = FALSE,              # do not overwrite by default
+  name_conflict = "make_unique"   # or "error" to fail on conflicts
+)
 
 # Verify conversion
 file.exists("seurat_output.h5ad")
