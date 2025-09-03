@@ -346,3 +346,23 @@ as.SingleCellExperiment.1CB.1CellbioData <- function(object, ...) {
   as.SingleCellExperiment.1CellbioData(object, ...)
 }
 
+#' S3 method for converting StereoData to Seurat object
+#'
+#' @param object A StereoData object
+#' @param ... Additional arguments passed to as.Seurat.StereoData
+#' @return A Seurat object
+#' @export
+as.Seurat.1CB.StereoData <- function(object, ...) {
+  as.Seurat.StereoData(object, ...)
+}
+
+#' S3 method for converting StereoData to SingleCellExperiment object
+#'
+#' @param object A StereoData object
+#' @param ... Additional arguments passed to as.SingleCellExperiment.StereoData
+#' @return A SingleCellExperiment object
+#' @export
+as.SingleCellExperiment.1CB.StereoData <- function(object, ...) {
+  as.SingleCellExperiment.StereoData(object, ...)
+}
+
