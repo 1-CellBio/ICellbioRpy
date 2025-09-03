@@ -278,8 +278,10 @@ list_conda_envs_with_anndata <- function(verbose = TRUE) {
     result <- tryCatch({
       suppressWarnings(system2(python_path, temp_script, stdout = TRUE, stderr = TRUE))
     }, error = function(e) {
-      attr(NULL, "status") <- 999  # Error status
-      NULL
+      # Return an object with error status
+      result <- NULL
+      attr(result, "status") <- 999  # Error status
+      result
     })
     
     # Clean up
