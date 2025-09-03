@@ -4,8 +4,8 @@ Title: Read and Convert 1CellBio Results and Stereo-seq GEF Files to Seurat, Sin
 Version: 0.2.0
 Authors@R: 
     c(
-      person("1Cellbio", "X", email = "508858100@qq.com",
-             role = c("aut"))
+      person("1Cellbio", "Team", email = "508858100@qq.com",
+             role = c("aut",'cre'), comment = c(wechat = "_1Cellbio"))
     )
 URL: https://github.com/1-Cellbio/ICellbioRpy
 BugReports: https://github.com/1-Cellbio/ICellbioRpy/issues
