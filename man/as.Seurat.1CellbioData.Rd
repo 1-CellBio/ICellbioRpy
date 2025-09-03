@@ -2,12 +2,22 @@
 % Please edit documentation in R/read1Cellbio.R
 \name{as.Seurat.1CellbioData}
 \alias{as.Seurat.1CellbioData}
-\title{Convert 1CellbioData to Seurat object}
+\title{Convert 1CellbioData to Seurat object (DEPRECATED)}
 \usage{
-\method{as.Seurat}{`1CellbioData`}(object, ...)
+\method{as.Seurat}{`1CellbioData`}(
+  object,
+  rownames = NULL,
+  colnames = NULL,
+  ...,
+  name_conflict = c("make_unique", "error")
+)
 }
 \arguments{
 \item{object}{A 1CellbioData object}
+
+\item{rownames}{Character string specifying the column name in row data to use as gene names (required)}
+
+\item{colnames}{Character string specifying the column name in column data to use as cell names (required)}
 
 \item{...}{Additional arguments (not used)}
 }
@@ -15,5 +25,6 @@
 A Seurat object
 }
 \description{
-Convert 1CellbioData to Seurat object
+Convert 1CellbioData to Seurat object (DEPRECATED)
 }
+\keyword{internal}

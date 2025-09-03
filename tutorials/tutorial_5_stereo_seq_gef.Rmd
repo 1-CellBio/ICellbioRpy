@@ -1,0 +1,427 @@
+---
+title: "Tutorial 5: Reading Stereo-seq GEF Files with Cell Border Support"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: united
+    highlight: tango
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Introduction
+
+This tutorial demonstrates how to read Stereo-seq GEF (Gene Expression File) format files using the ICellbioRpy package. The new `read_gef()` function provides comprehensive support for spatial transcriptomics data, including cell border information for high-quality spatial visualization.
+
+## What is GEF Format?
+
+GEF (Gene Expression File) is a specialized HDF5-based format developed by STOmics for storing spatial transcriptomics data efficiently. It contains:
+
+- Gene expression matrices
+- Cell metadata (coordinates, area, counts)
+- Cell border polygons for spatial visualization
+- Hierarchical data organization for fast access
+
+## Installation and Setup
+
+```{r load_packages}
+library(ICellbioRpy)
+library(ggplot2)
+library(dplyr)
+```
+
+# Reading GEF Files
+
+## Basic Usage
+
+The `read_gef()` function is the main entry point for reading GEF files:
+
+```{r read_basic, eval=FALSE}
+# Read a cellbin GEF file with all features
+stereo_data <- read_gef(
+  file_path = "C04042E3.cellbin.gef",
+  bin_type = "cell_bins",           # Use cell segmentation data
+  include_cellborder = TRUE         # Include cell border polygons
+)
+
+# Display summary
+summary(stereo_data)
+```
+
+## Parameters Explained
+
+- `file_path`: Path to your GEF file
+- `bin_type`: 
+  - `"cell_bins"`: Use cell segmentation-based data (recommended for spatial analysis)
+  - `"bins"`: Use square bin data (not yet implemented)
+- `include_cellborder`: Whether to load cell border polygons (TRUE recommended for visualization)
+- `max_cells`: Limit number of cells (useful for large datasets or testing)
+- `region`: Spatial filter `c(minX, maxX, minY, maxY)` to load specific areas
+- `gene_list`: Vector of genes to filter (by gene name or ID)
+
+# Memory Management for Large Datasets
+
+For large GEF files, use these strategies:
+
+```{r memory_management, eval=FALSE}
+# Strategy 1: Limit number of cells
+stereo_subset <- read_gef(
+  "large_file.cellbin.gef",
+  bin_type = "cell_bins",
+  max_cells = 1000
+)
+
+# Strategy 2: Spatial filtering
+stereo_region <- read_gef(
+  "large_file.cellbin.gef",
+  bin_type = "cell_bins",
+  region = c(1000, 5000, 1000, 5000)  # Focus on specific tissue region
+)
+
+# Strategy 3: Gene filtering
+stereo_genes <- read_gef(
+  "large_file.cellbin.gef", 
+  bin_type = "cell_bins",
+  gene_list = c("GAPDH", "ACTB", "CD45", "CD3E")  # Focus on specific markers
+)
+```
+
+# Converting to Standard R Objects
+
+## Convert to Seurat
+
+```{r convert_seurat, eval=FALSE}
+# Convert to Seurat object
+seurat_obj <- as.Seurat(stereo_data)
+
+# Cell borders are stored in misc slot
+print(paste("Cell borders available:", !is.null(seurat_obj@misc$cell_borders)))
+
+# Spatial coordinates are in the 'spatial' reduction
+spatial_coords <- seurat_obj@reductions$spatial@cell.embeddings
+print(head(spatial_coords))
+```
+
+## Convert to SingleCellExperiment
+
+```{r convert_sce, eval=FALSE}
+# Convert to SingleCellExperiment object
+sce_obj <- as.SingleCellExperiment(stereo_data)
+
+# Cell borders are in metadata
+cell_borders <- S4Vectors::metadata(sce_obj)$cell_borders
+
+# Spatial coordinates are in reducedDims
+spatial_coords <- SingleCellExperiment::reducedDim(sce_obj, "spatial")
+print(head(spatial_coords))
+```
+
+# Spatial Visualization
+
+## Basic Cell Plotting
+
+```{r plot_basic, eval=FALSE}
+# Plot cells without borders
+p1 <- plot_cells_with_borders(
+  seurat_obj,
+  show_borders = FALSE,
+  point_size = 1.0
+) + 
+  ggtitle("Cell Centers") +
+  theme_minimal()
+
+print(p1)
+```
+
+## Plotting with Cell Borders
+
+```{r plot_borders, eval=FALSE}
+# Plot cells with borders
+p2 <- plot_cells_with_borders(
+  seurat_obj,
+  show_borders = TRUE,
+  border_color = "darkblue",
+  border_size = 0.2,
+  point_size = 0.8
+) + 
+  ggtitle("Cells with Borders") +
+  theme_minimal()
+
+print(p2)
+```
+
+## Color by Cell Metadata
+
+```{r plot_colored, eval=FALSE}
+# Color cells by area
+p3 <- plot_cells_with_borders(
+  seurat_obj,
+  color_by = "area",
+  show_borders = TRUE,
+  border_color = "white",
+  border_size = 0.1,
+  point_size = 0.7
+) + 
+  ggtitle("Cells Colored by Area") +
+  scale_color_viridis_c(name = "Cell Area") +
+  theme_minimal()
+
+print(p3)
+
+# Color by gene count
+p4 <- plot_cells_with_borders(
+  seurat_obj,
+  color_by = "gene_count",
+  show_borders = TRUE,
+  border_color = "grey80",
+  border_size = 0.1
+) + 
+  ggtitle("Cells Colored by Gene Count") +
+  scale_color_viridis_c(name = "Genes") +
+  theme_minimal()
+
+print(p4)
+```
+
+# Working with Cell Border Data
+
+## Understanding Border Structure
+
+Cell borders are stored as lists of polygon coordinates:
+
+```{r border_structure, eval=FALSE}
+# Access cell borders from Seurat object
+cell_borders <- seurat_obj@misc$cell_borders
+
+# Check structure
+print(paste("Number of cells with border data:", length(cell_borders)))
+
+# Examine first cell's border
+first_cell_border <- cell_borders[[1]]
+print(head(first_cell_border))
+print(paste("Number of border points:", nrow(first_cell_border)))
+```
+
+## Custom Border Visualization
+
+```{r custom_borders, eval=FALSE}
+# Create custom visualization with ggplot2
+library(ggplot2)
+
+# Extract cell centers
+cell_centers <- seurat_obj@meta.data %>%
+  rownames_to_column("cell_id") %>%
+  select(cell_id, x, y, area)
+
+# Prepare border data
+border_data <- do.call(rbind, lapply(names(cell_borders), function(cell_id) {
+  border_df <- cell_borders[[cell_id]]
+  if (nrow(border_df) > 0) {
+    border_df$cell_id <- cell_id
+    return(border_df)
+  }
+  return(NULL)
+}))
+
+# Custom plot
+ggplot() +
+  geom_polygon(data = border_data, 
+               aes(x = x, y = y, group = cell_id), 
+               fill = "lightblue", color = "darkblue", size = 0.1, alpha = 0.7) +
+  geom_point(data = cell_centers, 
+             aes(x = x, y = y, size = area), 
+             color = "red", alpha = 0.8) +
+  coord_equal() +
+  theme_void() +
+  labs(title = "Custom Cell Border Visualization",
+       size = "Cell Area")
+```
+
+# Integration with Standard Workflows
+
+## Seurat Spatial Analysis
+
+```{r seurat_workflow, eval=FALSE}
+library(Seurat)
+
+# Standard Seurat preprocessing
+seurat_obj <- NormalizeData(seurat_obj)
+seurat_obj <- FindVariableFeatures(seurat_obj)
+seurat_obj <- ScaleData(seurat_obj)
+seurat_obj <- RunPCA(seurat_obj)
+seurat_obj <- FindNeighbors(seurat_obj)
+seurat_obj <- FindClusters(seurat_obj, resolution = 0.5)
+
+# Plot clusters with cell borders
+p_clusters <- plot_cells_with_borders(
+  seurat_obj,
+  color_by = "seurat_clusters",
+  show_borders = TRUE,
+  border_color = "white",
+  border_size = 0.1
+) + 
+  ggtitle("Spatial Clusters") +
+  scale_color_discrete(name = "Cluster") +
+  theme_minimal()
+
+print(p_clusters)
+```
+
+## SingleCellExperiment Analysis
+
+```{r sce_workflow, eval=FALSE}
+library(scater)
+library(scran)
+
+# Add QC metrics
+sce_obj <- addPerCellQC(sce_obj)
+
+# Normalization
+sce_obj <- logNormCounts(sce_obj)
+
+# Feature selection
+dec <- modelGeneVar(sce_obj)
+hvgs <- getTopHVGs(dec, n = 2000)
+
+# PCA
+sce_obj <- runPCA(sce_obj, subset_row = hvgs)
+
+# Clustering
+snn_graph <- buildSNNGraph(sce_obj, use.dimred = "PCA")
+clusters <- igraph::cluster_walktrap(snn_graph)$membership
+colData(sce_obj)$cluster <- factor(clusters)
+
+# Spatial visualization of clusters
+spatial_coords <- reducedDim(sce_obj, "spatial")
+cluster_df <- data.frame(
+  x = spatial_coords[, 1],
+  y = spatial_coords[, 2],
+  cluster = colData(sce_obj)$cluster
+)
+
+ggplot(cluster_df, aes(x = x, y = y, color = cluster)) +
+  geom_point(size = 0.8) +
+  coord_equal() +
+  theme_minimal() +
+  labs(title = "SCE Spatial Clusters")
+```
+
+# Advanced Features
+
+## Batch Processing Multiple Files
+
+```{r batch_processing, eval=FALSE}
+# Function to process multiple GEF files
+process_gef_files <- function(file_list, output_dir) {
+  results <- list()
+  
+  for (file_path in file_list) {
+    cat("Processing:", basename(file_path), "\n")
+    
+    # Read GEF file
+    stereo_data <- read_gef(file_path, bin_type = "cell_bins")
+    
+    # Convert to Seurat
+    seurat_obj <- as.Seurat(stereo_data)
+    
+    # Save processed object
+    sample_name <- tools::file_path_sans_ext(basename(file_path))
+    saveRDS(seurat_obj, file.path(output_dir, paste0(sample_name, "_seurat.rds")))
+    
+    results[[sample_name]] <- seurat_obj
+  }
+  
+  return(results)
+}
+
+# Example usage
+# gef_files <- c("sample1.cellbin.gef", "sample2.cellbin.gef")
+# processed_data <- process_gef_files(gef_files, "output/")
+```
+
+## Integration with Spatial Analysis Packages
+
+```{r spatial_integration, eval=FALSE}
+# Example: Integration with SpatialExperiment
+library(SpatialExperiment)
+
+# Convert to SpatialExperiment
+spatial_coords <- reducedDim(sce_obj, "spatial")
+spe <- SpatialExperiment(
+  assays = list(counts = assay(sce_obj, "counts")),
+  colData = colData(sce_obj),
+  spatialCoords = spatial_coords
+)
+
+# Add cell borders as spatial data
+if (!is.null(metadata(sce_obj)$cell_borders)) {
+  metadata(spe)$cell_borders <- metadata(sce_obj)$cell_borders
+}
+
+print(spe)
+```
+
+# Troubleshooting
+
+## Common Issues and Solutions
+
+### Memory Issues
+```{r memory_tips, eval=FALSE}
+# For large files, use these strategies:
+# 1. Read subset of cells
+stereo_subset <- read_gef("large.gef", max_cells = 1000)
+
+# 2. Read specific region
+stereo_region <- read_gef("large.gef", region = c(0, 5000, 0, 5000))
+
+# 3. Skip cell borders for memory-intensive analysis
+stereo_minimal <- read_gef("large.gef", include_cellborder = FALSE)
+```
+
+### File Format Issues
+```{r format_tips, eval=FALSE}
+# Check if file is a valid GEF file
+file_info <- hdf5r::h5file(file_path, mode = "r")
+print(file_info$ls()$name)  # Should contain 'cellBin' for cellbin files
+file_info$close()
+```
+
+### Plotting Issues
+```{r plot_tips, eval=FALSE}
+# If borders don't show properly, check:
+# 1. Are cell borders included?
+print(!is.null(seurat_obj@misc$cell_borders))
+
+# 2. Do cells have border data?
+non_empty_borders <- sum(sapply(seurat_obj@misc$cell_borders, 
+                               function(x) !is.null(x) && nrow(x) > 0))
+print(paste("Cells with borders:", non_empty_borders))
+
+# 3. Adjust plotting parameters
+p <- plot_cells_with_borders(seurat_obj, 
+                            border_size = 0.5,  # Increase if borders too thin
+                            point_size = 0.1)   # Decrease if points too large
+```
+
+# Summary
+
+The ICellbioRpy package now provides comprehensive support for Stereo-seq GEF files:
+
+- ✅ Direct reading of cellbin GEF files
+- ✅ Cell border polygon extraction and visualization
+- ✅ Memory-efficient loading strategies
+- ✅ Seamless integration with Seurat and SingleCellExperiment
+- ✅ Advanced spatial visualization capabilities
+- ✅ Support for filtering by genes, regions, and cell numbers
+
+This makes ICellbioRpy a powerful tool for spatial transcriptomics analysis, bridging the gap between STOmics data formats and standard R single-cell analysis workflows.
+
+
+
+
+
+

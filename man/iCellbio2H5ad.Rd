@@ -4,7 +4,15 @@
 \alias{iCellbio2H5ad}
 \title{Convert 1Cellbio results zip file directly to h5ad format}
 \usage{
-iCellbio2H5ad(zip_path, h5ad_path, temp_dir = NULL, cleanup = TRUE)
+iCellbio2H5ad(
+  zip_path,
+  h5ad_path,
+  temp_dir = NULL,
+  cleanup = TRUE,
+  overwrite = FALSE,
+  name_conflict = c("make_unique", "error"),
+  verbose = TRUE
+)
 }
 \arguments{
 \item{zip_path}{Path to the zip file containing 1Cellbio results}

@@ -2,9 +2,15 @@
 % Please edit documentation in R/python_config.R
 \name{configure_python_env}
 \alias{configure_python_env}
-\title{Configure Python environment for anndata}
+\title{Configure Python environment for anndata (REQUIRED)}
 \usage{
-configure_python_env(python_path = NULL, conda_env = NULL, verbose = TRUE)
+configure_python_env(
+  python_path = NULL,
+  conda_env = NULL,
+  verbose = TRUE,
+  timeout = 30,
+  force_conda = TRUE
+)
 }
 \arguments{
 \item{python_path}{Optional path to Python executable. If NULL, uses current environment.}
@@ -12,23 +18,27 @@ configure_python_env(python_path = NULL, conda_env = NULL, verbose = TRUE)
 \item{conda_env}{Optional conda environment name. If NULL, uses current environment.}
 
 \item{verbose}{Logical, whether to print configuration messages (default: TRUE)}
+
+\item{timeout}{Numeric, timeout in seconds for Python configuration (default: 30)}
+
+\item{force_conda}{Logical, whether to force conda environment usage (default: TRUE)}
 }
 \value{
-Invisible TRUE if configuration successful
+Invisible TRUE if configuration successful, throws error if failed
 }
 \description{
-This function configures the Python environment to use existing anndata installation
-and prevents automatic package installation/upgrade.
+This function configures the Python environment to use existing anndata installation.
+IMPORTANT: This function MUST be called before using any conversion functions.
 }
 \examples{
 \dontrun{
-# Use current Python environment (default)
-configure_python_env()
+# REQUIRED: Configure before any operations
+configure_python_env(conda_env = "1cellbio", verbose = TRUE)
 
-# Use specific conda environment
+# Use specific conda environment (recommended)
 configure_python_env(conda_env = "your_env_name")
 
-# Use specific Python path
+# Use specific Python path (advanced)
 configure_python_env(python_path = "/usr/local/bin/python3")
 }
 

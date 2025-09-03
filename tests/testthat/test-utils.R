@@ -63,3 +63,4 @@ test_that("construct_sparse_matrix works correctly", {
   expect_equal(dim(result), c(3, 3))
   expect_equal(Matrix::nnzero(result), 3)
 })
+

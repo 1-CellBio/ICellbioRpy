@@ -10,6 +10,10 @@
 \item{object}{A 1CellbioData object}
 
 \item{...}{Additional arguments (not used)}
+
+\item{rownames}{Character string specifying the column name in row data to use as gene names (required)}
+
+\item{colnames}{Character string specifying the column name in column data to use as cell names (required)}
 }
 \value{
 A SingleCellExperiment object

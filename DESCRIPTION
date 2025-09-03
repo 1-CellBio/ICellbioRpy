@@ -1,6 +1,6 @@
 Package: ICellbioRpy
 Type: Package
-Title: Read and Convert 1CellBio Results to Seurat, SingleCellExperiment and H5AD
+Title: Read and Convert 1CellBio Results and Stereo-seq GEF Files to Seurat, SingleCellExperiment and H5AD
 Version: 0.2.0
 Authors@R: 
     c(
@@ -9,7 +9,7 @@ Authors@R:
     )
 URL: https://github.com/1-Cellbio/ICellbioRpy
 BugReports: https://github.com/1-Cellbio/ICellbioRpy/issues
-Description: Tools to convert 1CellBio results (ZIP) to Seurat, SingleCellExperiment, and H5AD formats, and interconvert between R and Python single-cell formats with memory-efficient sparse matrix preservation.
+Description: Tools to convert 1CellBio results (ZIP) and Stereo-seq GEF files to Seurat, SingleCellExperiment, and H5AD formats, with comprehensive support for spatial transcriptomics including cell border visualization. Includes memory-efficient sparse matrix preservation and interconversion between R and Python single-cell formats.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -27,7 +27,8 @@ Imports:
     S4Vectors (>= 0.38.0),
     SummarizedExperiment (>= 1.30.0),
     data.table (>= 1.14.0),
-    R.utils (>= 2.12.0)
+    R.utils (>= 2.12.0),
+    ggplot2 (>= 3.4.0)
 Suggests:
     testthat,
     knitr,

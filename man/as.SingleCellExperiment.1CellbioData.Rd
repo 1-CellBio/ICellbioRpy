@@ -2,12 +2,22 @@
 % Please edit documentation in R/read1Cellbio.R
 \name{as.SingleCellExperiment.1CellbioData}
 \alias{as.SingleCellExperiment.1CellbioData}
-\title{Convert 1CellbioData to SingleCellExperiment object}
+\title{Convert 1CellbioData to SingleCellExperiment object (DEPRECATED)}
 \usage{
-as.SingleCellExperiment.1CellbioData(object, ...)
+as.SingleCellExperiment.1CellbioData(
+  object,
+  rownames = NULL,
+  colnames = NULL,
+  ...,
+  name_conflict = c("make_unique", "error")
+)
 }
 \arguments{
 \item{object}{A 1CellbioData object}
+
+\item{rownames}{Character string specifying the column name in row data to use as gene names (required)}
+
+\item{colnames}{Character string specifying the column name in column data to use as cell names (required)}
 
 \item{...}{Additional arguments (not used)}
 }
@@ -15,5 +25,6 @@ as.SingleCellExperiment.1CellbioData(object, ...)
 A SingleCellExperiment object
 }
 \description{
-Convert 1CellbioData to SingleCellExperiment object
+Convert 1CellbioData to SingleCellExperiment object (DEPRECATED)
 }
+\keyword{internal}

@@ -12,7 +12,9 @@ ICellbioRpy是一个专业的R包，用于单细胞RNA测序数据格式转换�
 ### ✨ 主要特性
 
 - 🚀 **一键转换**：支持1CellBio ZIP → H5AD/Seurat/SingleCellExperiment
+- 🗂️ **Stereo-seq支持**：原生读取GEF文件，完整保留细胞边界信息
 - 📊 **多样本整合**：从多个10X MTX文件整合为单一H5AD文件
+- 🎨 **空间可视化**：带细胞边界的高质量空间转录组可视化
 - 💾 **内存高效**：自动保留稀疏矩阵格式，节省70-90%存储空间
 - 🔄 **双向转换**：支持R对象与Python格式间的相互转换
 - 🎨 **初学者友好**：提供超详细的环境安装教程
@@ -166,7 +168,66 @@ read_10x_mtx_to_h5ad(
 )
 ```
 
-#### 5. H5AD → R对象（反向转换）
+#### 5. Stereo-seq GEF → R对象（空间转录组）
+
+```r
+# 读取Stereo-seq GEF文件（带细胞边界）
+stereo_data <- read_gef(
+  file_path = "sample.cellbin.gef",
+  bin_type = "cell_bins",
+  include_cellborder = TRUE
+)
+
+# 转换为Seurat对象（自动保留细胞边界信息）
+seurat_obj <- as.Seurat(stereo_data)
+
+# 转换为SingleCellExperiment对象
+sce_obj <- as.SingleCellExperiment(stereo_data)
+
+# 空间可视化（带细胞边界）
+plot_cells_with_borders(
+  seurat_obj,
+  color_by = "area",           # 按细胞面积着色
+  show_borders = TRUE,         # 显示细胞边界
+  border_color = "white"
+)
+
+# 内存优化读取（大文件处理）
+stereo_subset <- read_gef(
+  "large.cellbin.gef",
+  max_cells = 5000,                           # 限制细胞数
+  region = c(1000, 5000, 1000, 5000)        # 空间区域过滤
+)
+```
+
+#### 6. Stereo-seq GEF → H5AD（Python分析）
+
+```r
+# 方法1：两步转换
+stereo_data <- read_gef("sample.cellbin.gef", include_cellborder = TRUE)
+stereo_to_h5ad(stereo_data, "output.h5ad", include_spatial = TRUE)
+
+# 方法2：直接转换（推荐，内存高效）
+gef_to_h5ad(
+  gef_file = "sample.cellbin.gef",
+  h5ad_file = "output.h5ad",
+  bin_type = "cell_bins",
+  include_cellborder = TRUE,    # cell_borders存储在adata.uns中
+  include_spatial = TRUE,       # 空间坐标存储在adata.obsm中
+  max_cells = 10000            # 内存管理
+)
+
+# 大文件处理：区域过滤 + 基因筛选
+gef_to_h5ad(
+  gef_file = "large_sample.cellbin.gef",
+  h5ad_file = "filtered.h5ad",
+  region = c(1000, 5000, 1000, 5000),      # 空间区域过滤
+  gene_list = c("GAPDH", "ACTB", "CD45"),  # 基因过滤
+  overwrite = TRUE
+)
+```
+
+#### 7. H5AD → R对象（反向转换）
 
 ```r
 # H5AD转SingleCellExperiment
@@ -185,11 +246,15 @@ sce <- h5ad_to_sce("data.h5ad", use_x_as = "counts")
 
 ### 核心转换函数
 - `read1Cellbio()` - 从ZIP文件读取1CellBio结果
+- `read_gef()` - **新功能**：读取Stereo-seq GEF文件（支持细胞边界）
+- `gef_to_h5ad()` - **新功能**：GEF文件直接转H5AD（细胞边界存储在uns中）
+- `stereo_to_h5ad()` - **新功能**：StereoData对象转H5AD格式
 - `iCellbio2H5ad()` - **直接转换**：ZIP → H5AD（内存高效）
 - `as.Seurat.1CB()` - 1CellbioData → Seurat对象
 - `as.SingleCellExperiment.1CB()` - 1CellbioData → SingleCellExperiment对象
+- `plot_cells_with_borders()` - **新功能**：空间转录组可视化（细胞边界）
 - `seurat_to_h5ad()` - Seurat对象 → H5AD文件
-- `read_10x_mtx_to_h5ad()` - **新功能**：多样本10X数据整合
+- `read_10x_mtx_to_h5ad()` - 多样本10X数据整合
 - `h5ad_to_sce()` - H5AD → SingleCellExperiment
 - `h5ad_to_seurat()` - H5AD → Seurat对象
 

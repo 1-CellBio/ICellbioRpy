@@ -52,3 +52,4 @@ test_that("icb_get_lang function works", {
   # Reset to default
   options(ICellbioRpy.lang = NULL)
 })
+

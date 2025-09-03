@@ -149,3 +149,4 @@ test_that("name_conflict parameter works", {
     sce2 <- h5ad_to_sce(temp_h5ad, name_conflict = "error", verbose = FALSE)
   })
 })
+
