@@ -35,3 +35,6 @@ dev/
 PACKAGE_CLEANUP_SUMMARY.md
 QUICK_START_OPTIMIZATION_SUMMARY.md
 WeChat_Article.md
+
+.github/workflows
+_pkgdown.yml
