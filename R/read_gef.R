@@ -22,7 +22,7 @@
 #' seurat_obj <- as.Seurat(stereo_data)
 #' 
 #' # Convert to SingleCellExperiment
-#' sce_obj <- as.SingleCellExperiment(stereo_data)
+#' sce_obj <- as.SingleCellExperiment.StereoData(stereo_data)
 #' }
 read_gef <- function(file_path, 
                      bin_type = c("cell_bins", "bins"),
@@ -339,6 +339,7 @@ read_gef_cell_borders <- function(cellbin_group, cell_info) {
 #' @param object A StereoData object
 #' @param ... Additional arguments
 #' @return A Seurat object
+#' @method as.Seurat StereoData
 #' @export
 as.Seurat.StereoData <- function(object, ...) {
   
@@ -378,6 +379,7 @@ as.Seurat.StereoData <- function(object, ...) {
 #' @param object A StereoData object
 #' @param ... Additional arguments
 #' @return A SingleCellExperiment object
+#' @method as.SingleCellExperiment StereoData
 #' @export
 as.SingleCellExperiment.StereoData <- function(object, ...) {
   

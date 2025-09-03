@@ -4,7 +4,7 @@
 \alias{as.SingleCellExperiment.StereoData}
 \title{Convert StereoData to SingleCellExperiment object}
 \usage{
-as.SingleCellExperiment.StereoData(object, ...)
+\method{as.SingleCellExperiment}{StereoData}(object, ...)
 }
 \arguments{
 \item{object}{A StereoData object}

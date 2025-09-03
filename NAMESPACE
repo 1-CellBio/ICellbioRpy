@@ -2,12 +2,12 @@
 
 S3method(as.Seurat.1CB,"1CellbioData")
 S3method(as.Seurat,StereoData)
+
 S3method(as.SingleCellExperiment.1CB,"1CellbioData")
-S3method(as.SingleCellExperiment,StereoData)
 S3method(summary,StereoData)
 export(as.Seurat.1CB)
 export(as.SingleCellExperiment.1CB)
-
+export(as.SingleCellExperiment.StereoData)
 export(check_anndata_available)
 export(configure_python_env)
 export(gef_to_h5ad)
@@ -36,3 +36,4 @@ importFrom(Matrix,t)
 importFrom(S4Vectors,DataFrame)
 importFrom(Seurat,as.Seurat)
 importFrom(SingleCellExperiment,SingleCellExperiment)
+importFrom(SingleCellExperiment,reducedDim)
