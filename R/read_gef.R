@@ -339,6 +339,7 @@ read_gef_cell_borders <- function(cellbin_group, cell_info) {
 #' @param object A StereoData object
 #' @param ... Additional arguments
 #' @return A Seurat object
+#' @importFrom Seurat as.Seurat
 #' @export
 as.Seurat.StereoData <- function(object, ...) {
   
@@ -378,6 +379,7 @@ as.Seurat.StereoData <- function(object, ...) {
 #' @param object A StereoData object
 #' @param ... Additional arguments
 #' @return A SingleCellExperiment object
+#' @importFrom Seurat as.SingleCellExperiment
 #' @export
 as.SingleCellExperiment.StereoData <- function(object, ...) {
   

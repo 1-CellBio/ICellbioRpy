@@ -10,7 +10,7 @@ library(ggplot2)
 # Read cellbin GEF file with cell borders
 cat("Reading GEF file...\n")
 stereo_data <- read_gef(
-  file_path = "C04042E3.cellbin.gef",
+  file_path = "../C04042E3.cellbin.gef",
   bin_type = "cell_bins",
   max_cells = 1000,  # Limit for demonstration
   include_cellborder = TRUE
@@ -22,6 +22,11 @@ summary(stereo_data)
 
 # Example 2: Convert to Seurat object
 cat("\nConverting to Seurat object...\n")
+# Note: Make sure Seurat package is loaded before using as.Seurat
+if (!requireNamespace("Seurat", quietly = TRUE)) {
+  stop("Seurat package is required for this conversion. Please install it with: install.packages('Seurat')")
+}
+library(Seurat)
 seurat_obj <- as.Seurat(stereo_data)
 
 # Check basic information
@@ -30,6 +35,10 @@ cat("Cell border information available:", !is.null(seurat_obj@misc$cell_borders)
 
 # Example 3: Convert to SingleCellExperiment object
 cat("\nConverting to SingleCellExperiment object...\n")
+# Note: Make sure required packages are loaded
+if (!requireNamespace("SingleCellExperiment", quietly = TRUE)) {
+  stop("SingleCellExperiment package is required. Please install it with: BiocManager::install('SingleCellExperiment')")
+}
 sce_obj <- as.SingleCellExperiment(stereo_data)
 
 cat("SCE object created with", ncol(sce_obj), "cells and", nrow(sce_obj), "genes\n")

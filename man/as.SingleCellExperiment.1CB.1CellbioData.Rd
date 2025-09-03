@@ -4,7 +4,7 @@
 \alias{as.SingleCellExperiment.1CB.1CellbioData}
 \title{S3 method for converting 1CellbioData to SingleCellExperiment object}
 \usage{
-\method{as.SingleCellExperiment.1CB}{`1CellbioData`}(object, ...)
+\method{as.SingleCellExperiment}{`1CB.1CellbioData`}(object, ...)
 }
 \arguments{
 \item{object}{A 1CellbioData object}

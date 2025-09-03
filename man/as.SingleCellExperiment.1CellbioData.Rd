@@ -4,7 +4,7 @@
 \alias{as.SingleCellExperiment.1CellbioData}
 \title{Convert 1CellbioData to SingleCellExperiment object (DEPRECATED)}
 \usage{
-as.SingleCellExperiment.1CellbioData(
+\method{as.SingleCellExperiment}{`1CellbioData`}(
   object,
   rownames = NULL,
   colnames = NULL,

@@ -307,6 +307,7 @@ as.SingleCellExperiment.1CellbioData <- function(object, rownames = NULL, colnam
 #' @param object A 1CellbioData object
 #' @param ... Additional arguments (not used)
 #' @return A Seurat object
+#' @importFrom Seurat as.Seurat
 #' @export
 as.Seurat.1CB <- function(object, ...) {
   UseMethod("as.Seurat.1CB")
@@ -329,6 +330,7 @@ as.Seurat.1CB.1CellbioData <- function(object, ...) {
 #' @param object A 1CellbioData object
 #' @param ... Additional arguments (not used)
 #' @return A SingleCellExperiment object
+#' @importFrom Seurat as.SingleCellExperiment
 #' @export
 as.SingleCellExperiment.1CB <- function(object, ...) {
   UseMethod("as.SingleCellExperiment.1CB")
