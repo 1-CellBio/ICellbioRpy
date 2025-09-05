@@ -357,13 +357,15 @@ as.Seurat.1CellbioData_impl <- function(object, rownames = NULL, colnames = NULL
   rowdata_path <- file.path(object$base_path, object$experiment$summarized_experiment$row_data$resource$path)
   rowdata_df <- read_hdf5_dataframe(rowdata_path)
   
-  # Read expression matrix
+  # Read expression matrices
   # Find the counts assay
   counts_assay <- NULL
+  logcounts_assay <- NULL
   for (assay in object$experiment$summarized_experiment$assays) {
     if (assay$name == "counts") {
       counts_assay <- assay
-      break
+    } else if (assay$name == "logcounts") {
+      logcounts_assay <- assay
     }
   }
 
@@ -371,8 +373,21 @@ as.Seurat.1CellbioData_impl <- function(object, rownames = NULL, colnames = NULL
     stop("Could not find counts assay in the data")
   }
 
-  matrix_path <- file.path(object$base_path, counts_assay$resource$path)
-  counts <- read_hdf5_sparse_matrix(matrix_path)
+  # Read counts matrix
+  counts_path <- file.path(object$base_path, counts_assay$resource$path)
+  counts <- read_hdf5_sparse_matrix(counts_path)
+
+  # Read logcounts matrix if available
+  logcounts <- NULL
+  if (!is.null(logcounts_assay)) {
+    tryCatch({
+      logcounts_path <- file.path(object$base_path, logcounts_assay$resource$path)
+      logcounts <- read_hdf5_matrix(logcounts_path)
+      message("Added logcounts assay to Seurat object")
+    }, error = function(e) {
+      warning("Failed to read logcounts assay: ", e$message)
+    })
+  }
   
   # Set row names and column names
   if (!is.null(rownames)) {
@@ -403,6 +418,34 @@ as.Seurat.1CellbioData_impl <- function(object, rownames = NULL, colnames = NULL
   
   # Create Seurat object
   seurat_obj <- Seurat::CreateSeuratObject(counts = counts)
+
+  # Add logcounts data if available
+  if (!is.null(logcounts)) {
+    tryCatch({
+      # Ensure logcounts has the same dimensions as counts
+      if (all(dim(logcounts) == dim(counts))) {
+        # Set row and column names for logcounts to match counts
+        rownames(logcounts) <- rownames(counts)
+        colnames(logcounts) <- colnames(counts)
+
+        # Add logcounts to Seurat object using NormalizeData approach
+        # This is more memory-efficient than direct assignment
+        seurat_obj <- Seurat::NormalizeData(seurat_obj, normalization.method = "LogNormalize", scale.factor = 10000, verbose = FALSE)
+
+        # Replace the normalized data with our logcounts
+        if ("data" %in% names(seurat_obj[["RNA"]]@layers)) {
+          seurat_obj[["RNA"]]@layers$data <- logcounts
+          message("Successfully added logcounts data to Seurat object")
+        } else {
+          warning("Could not find data layer after normalization")
+        }
+      } else {
+        warning("Logcounts dimensions do not match counts, skipping logcounts addition")
+      }
+    }, error = function(e) {
+      warning("Failed to add logcounts to Seurat object: ", e$message)
+    })
+  }
 
   # Add metadata
   seurat_obj@meta.data <- cbind(seurat_obj@meta.data, coldata_df)

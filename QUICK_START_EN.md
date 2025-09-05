@@ -117,7 +117,7 @@ seurat
 #> 20000 features across 3000 samples
 
 # Access data
-counts_matrix <- GetAssayData(seurat, slot = "counts")
+counts_matrix <- GetAssayData(seurat, layer = "counts")
 cell_metadata <- seurat[[]]
 pca_coords <- Embeddings(seurat, reduction = "pca")
 ```

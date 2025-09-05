@@ -119,7 +119,7 @@ library(Seurat)  # 必须先加载Seurat包
 library(ICellbioRpy)
 
 # 读取数据
-data <- read1Cellbio("1Cellbio_results.zip")
+data <- read1Cellbio("../1Cellbio_results.zip")
 
 # 转换为Seurat对象
 seurat_obj <- as.Seurat(data,
@@ -149,10 +149,10 @@ head(colnames(seurat_obj))  # 查看细胞名
 
 ```r
 # 将R中的Seurat对象转换为Python可用的H5AD格式
-seurat_to_h5ad(seurat_obj, "output.h5ad")
+seurat_to_h5ad(seurat_obj, "1Cellbio.h5ad")
 
 # 高级选项
-seurat_to_h5ad(seurat_obj, "output.h5ad",
+seurat_to_h5ad(seurat_obj, "1Cellbio.h5ad",
                default_assay = "RNA",
                layer = "data",
                include_reductions = TRUE,

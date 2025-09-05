@@ -96,15 +96,15 @@ seurat_to_h5ad <- function(seurat_obj,
   if (verbose) cat("Extracting main matrix from assay:", default_assay, "layer:", layer, "\n")
   
   if (layer == "data") {
-    main_matrix <- Seurat::GetAssayData(seurat_obj, assay = default_assay, slot = "data")
+    main_matrix <- Seurat::GetAssayData(seurat_obj, assay = default_assay, layer = "data")
     # If data slot is empty, try counts slot
     if (is.null(main_matrix) || nrow(main_matrix) == 0 || all(main_matrix == 0)) {
       if (verbose) cat("Data slot is empty, using counts slot instead...\n")
-      main_matrix <- Seurat::GetAssayData(seurat_obj, assay = default_assay, slot = "counts")
+      main_matrix <- Seurat::GetAssayData(seurat_obj, assay = default_assay, layer = "counts")
       layer <- "counts"  # Update layer info for later processing
     }
   } else if (layer == "counts") {
-    main_matrix <- Seurat::GetAssayData(seurat_obj, assay = default_assay, slot = "counts")
+    main_matrix <- Seurat::GetAssayData(seurat_obj, assay = default_assay, layer = "counts")
   } else {
     stop("Layer must be either 'data' or 'counts'")
   }
@@ -162,7 +162,7 @@ seurat_to_h5ad <- function(seurat_obj,
       if (assay_name != default_assay) {
         # Add both data and counts if available
         tryCatch({
-          data_matrix <- Seurat::GetAssayData(seurat_obj, assay = assay_name, slot = "data")
+          data_matrix <- Seurat::GetAssayData(seurat_obj, assay = assay_name, layer = "data")
           if (!is.null(data_matrix) && nrow(data_matrix) > 0) {
             data_matrix <- Matrix::t(data_matrix)
             adata$layers[[paste0(assay_name, "_data")]] <- data_matrix
@@ -173,7 +173,7 @@ seurat_to_h5ad <- function(seurat_obj,
         })
         
         tryCatch({
-          counts_matrix <- Seurat::GetAssayData(seurat_obj, assay = assay_name, slot = "counts")
+          counts_matrix <- Seurat::GetAssayData(seurat_obj, assay = assay_name, layer = "counts")
           if (!is.null(counts_matrix) && nrow(counts_matrix) > 0) {
             counts_matrix <- Matrix::t(counts_matrix)
             adata$layers[[paste0(assay_name, "_counts")]] <- counts_matrix
@@ -190,7 +190,7 @@ seurat_to_h5ad <- function(seurat_obj,
   if (layer == "data") {
     # Add counts as a layer if available
     tryCatch({
-      counts_matrix <- Seurat::GetAssayData(seurat_obj, assay = default_assay, slot = "counts")
+      counts_matrix <- Seurat::GetAssayData(seurat_obj, assay = default_assay, layer = "counts")
       if (!is.null(counts_matrix) && nrow(counts_matrix) > 0) {
         counts_matrix <- Matrix::t(counts_matrix)
         adata$layers[["counts"]] <- counts_matrix
@@ -202,7 +202,7 @@ seurat_to_h5ad <- function(seurat_obj,
   } else {
     # Add data as a layer if available
     tryCatch({
-      data_matrix <- Seurat::GetAssayData(seurat_obj, assay = default_assay, slot = "data")
+      data_matrix <- Seurat::GetAssayData(seurat_obj, assay = default_assay, layer = "data")
       if (!is.null(data_matrix) && nrow(data_matrix) > 0) {
         data_matrix <- Matrix::t(data_matrix)
         adata$layers[["logcounts"]] <- data_matrix

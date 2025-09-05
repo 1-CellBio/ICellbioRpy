@@ -168,10 +168,10 @@ umap_coords <- reducedDim(sce, "UMAP")
 
 ```{r}
 # Access count data
-counts_matrix <- GetAssayData(seurat, slot = "counts")
+counts_matrix <- GetAssayData(seurat, layer = "counts")
 
 # Access normalized data
-norm_data <- GetAssayData(seurat, slot = "data")
+norm_data <- GetAssayData(seurat, layer = "data")
 
 # Access cell metadata
 cell_metadata <- seurat[[]]
