@@ -71,18 +71,18 @@ data <- read1Cellbio("path/to/your/1cellbio_results.zip")
 ```{r to-seurat}
 # Convert to Seurat object
 # You need to specify which columns to use as gene and cell names
-seurat_obj <- as.Seurat.1CB(data, 
-                           rownames = "gene_id",    # column for gene names
-                           colnames = "cell_id")    # column for cell names
+seurat_obj <- as.Seurat(data,
+                       rownames = "id",        # column for gene names
+                       colnames = "cell_id")   # column for cell names
 ```
 
 #### Convert to SingleCellExperiment
 
 ```{r to-sce}
 # Convert to SingleCellExperiment object
-sce <- as.SingleCellExperiment.1CB(data, 
-                                  rownames = "gene_id", 
-                                  colnames = "cell_id")
+sce <- as.SingleCellExperiment(data,
+                              rownames = "id",
+                              colnames = "cell_id")
 ```
 
 #### Direct conversion to H5AD
@@ -154,10 +154,10 @@ read_10x_mtx_to_h5ad(
 
 ```{r name-conflicts}
 # Handle duplicate names automatically
-seurat_obj <- as.Seurat.1CB(data, 
-                           rownames = "gene_id", 
-                           colnames = "cell_id",
-                           name_conflict = "make_unique")  # or "error"
+seurat_obj <- as.Seurat(data,
+                       rownames = "id",
+                       colnames = "cell_id",
+                       name_conflict = "make_unique")  # or "error"
 ```
 
 ### Layer Selection

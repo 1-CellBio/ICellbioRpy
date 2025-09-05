@@ -403,11 +403,45 @@ as.Seurat.1CellbioData_impl <- function(object, rownames = NULL, colnames = NULL
   
   # Create Seurat object
   seurat_obj <- Seurat::CreateSeuratObject(counts = counts)
-  
+
   # Add metadata
   seurat_obj@meta.data <- cbind(seurat_obj@meta.data, coldata_df)
   seurat_obj@meta.data <- seurat_obj@meta.data[, !duplicated(colnames(seurat_obj@meta.data))]
-  
+
+  # Add dimensionality reductions if available
+  if ("reduced_dimensions" %in% names(object$experiment$single_cell_experiment)) {
+    for (red_dim in object$experiment$single_cell_experiment$reduced_dimensions) {
+      tryCatch({
+        # Read the reduction matrix
+        red_path <- file.path(object$base_path, red_dim$resource$path)
+        red_matrix <- read_hdf5_matrix(red_path)
+
+        # Ensure row names (cells) match the Seurat object
+        if (!is.null(colnames) && colnames %in% colnames(coldata_df)) {
+          cell_names <- coldata_df[[colnames]]
+          if (name_conflict == "make_unique") {
+            cell_names <- make_unique_names(cell_names)
+          }
+          # Set row names for the reduction matrix (cells are rows in Seurat reductions)
+          rownames(red_matrix) <- cell_names
+        }
+
+        # Add the reduction to Seurat object
+        reduction_name <- tolower(red_dim$name)
+        seurat_obj[[reduction_name]] <- Seurat::CreateDimReducObject(
+          embeddings = red_matrix,
+          key = paste0(reduction_name, "_"),
+          assay = "RNA"
+        )
+
+        message("Added ", red_dim$name, " reduction to Seurat object")
+
+      }, error = function(e) {
+        warning("Failed to add ", red_dim$name, " reduction: ", e$message)
+      })
+    }
+  }
+
   return(seurat_obj)
 }
 

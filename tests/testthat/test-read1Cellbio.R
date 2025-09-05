@@ -67,20 +67,20 @@ test_that("1CellbioData object structure is correct", {
   expect_true("single_cell_experiment" %in% names(mock_data$experiment))
 })
 
-test_that("as.Seurat.1CB function exists and has correct signature", {
+test_that("as.Seurat function exists and has correct signature", {
   # Check that the function exists
-  expect_true(exists("as.Seurat.1CB"))
-  
+  expect_true(exists("as.Seurat"))
+
   # Check that it's a generic function
-  expect_true(isGeneric("as.Seurat.1CB"))
+  expect_true(isGeneric("as.Seurat"))
 })
 
-test_that("as.SingleCellExperiment.1CB function exists and has correct signature", {
+test_that("as.SingleCellExperiment function exists and has correct signature", {
   # Check that the function exists
-  expect_true(exists("as.SingleCellExperiment.1CB"))
-  
+  expect_true(exists("as.SingleCellExperiment"))
+
   # Check that it's a generic function
-  expect_true(isGeneric("as.SingleCellExperiment.1CB"))
+  expect_true(isGeneric("as.SingleCellExperiment"))
 })
 
 test_that("deprecated functions show appropriate warnings", {
