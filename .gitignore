@@ -26,7 +26,7 @@ Thumbs.db
 *.log
 
 # Test outputs
-test_*.h5ad
+*.h5ad
 test_*.zip
 final_test_*.h5ad
 
