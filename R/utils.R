@@ -38,13 +38,14 @@ construct_sparse_matrix <- function(data, indices, indptr, shape) {
 }
 
 #' Read HDF5 sparse matrix
-#' 
+#'
 #' This function reads a sparse matrix from HDF5 file and returns a dgCMatrix
-#' 
+#'
 #' @param file_path Path to the HDF5 file
 #' @return A dgCMatrix object
-#' 
+#'
 #' @import hdf5r
+#' @export
 read_hdf5_sparse_matrix <- function(file_path) {
   h5file <- hdf5r::H5File$new(file_path, mode = "r")
   on.exit(h5file$close())
@@ -118,11 +119,12 @@ read_hdf5_matrix <- function(file_path) {
 #' Read HDF5 data frame
 #' 
 #' This function reads a data frame from HDF5 file
-#' 
+#'
 #' @param file_path Path to the HDF5 file
 #' @return A data.frame object
-#' 
+#'
 #' @import hdf5r
+#' @export
 read_hdf5_dataframe <- function(file_path) {
   h5file <- hdf5r::H5File$new(file_path, mode = "r")
   on.exit(h5file$close())
@@ -150,22 +152,23 @@ read_hdf5_dataframe <- function(file_path) {
   for (i in seq_along(names_vec)) {
     col_name <- names_vec[i]
     # Try different possible paths for the data
+    # Use index-based paths first, then try name-based paths
     possible_paths <- c(
-      paste0("data/", col_name),
-      paste0("data/data/", i-1),  # 0-based indexing
-      paste0("data/", i-1)
+      paste0("data/data/", i-1),  # 0-based indexing (preferred)
+      paste0("data/", i-1),
+      paste0("data/", col_name)   # Name-based (may fail with special chars)
     )
-    
+
     for (path in possible_paths) {
       if (path %in% h5file$ls(recursive = TRUE)$name) {
         df_list[[col_name]] <- h5file[[path]][]
         break
       }
     }
-    
+
     # If we couldn't find the column data, add NA
     if (is.null(df_list[[col_name]])) {
-      warning("Could not find data for column: ", col_name)
+      warning("Could not find data for column: ", col_name, " at index ", i-1)
       df_list[[col_name]] <- rep(NA, 10)  # Placeholder
     }
   }

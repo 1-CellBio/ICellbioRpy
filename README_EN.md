@@ -112,18 +112,30 @@ as.h5ad(data, "output.h5ad")
 #### 2. 1CellBio → Seurat (for R analysis)
 
 ```r
+# Load required packages
+library(Seurat)  # Must load Seurat package first
+library(ICellbioRpy)
+
 # Read data
-data <- read1Cellbio("path/to/1cellbio_results.zip")
+data <- read1Cellbio("1cellbio_results.zip")
 
-# Convert to Seurat object (must specify gene and cell name columns)
-# Function will automatically display all available column names for reference
-seurat_obj <- as.Seurat.1CB(data, 
-                           rownames = "id",        # gene name column
-                           colnames = "cell_id")   # cell name column
+# Convert to Seurat object
+seurat_obj <- as.Seurat(data,
+                       rownames = "id",         # gene name column
+                       colnames = "cell_id")    # cell name column
 
-# Visualization
-library(Seurat)
-DimPlot(seurat_obj, reduction = "umap", group.by = "level1class")
+# Convert to SingleCellExperiment object
+sce_obj <- as.SingleCellExperiment(data,
+                                  rownames = "id",         # gene name column
+                                  colnames = "cell_id")    # cell name column
+
+# View conversion results
+print(seurat_obj)  # Display Seurat object information
+head(rownames(seurat_obj))  # View gene names
+head(colnames(seurat_obj))  # View cell names
+
+# Visualization (if data contains UMAP or other reductions)
+# DimPlot(seurat_obj, reduction = "umap", group.by = "level1class")
 ```
 
 **💡 Important Notes:**

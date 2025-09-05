@@ -69,7 +69,9 @@ iCellbio2H5ad(
 data <- read1Cellbio("path/to/your/1cellbio_results.zip")
 
 # 转换为Seurat
-seurat_obj <- as.Seurat.1CB(data)
+seurat_obj <- as.Seurat(data,
+                       rownames = "id",        # 基因名列
+                       colnames = "cell_id")   # 细胞名列
 ```
 
 ### 3. Seurat → H5AD（含覆盖与命名冲突控制）

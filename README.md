@@ -114,18 +114,30 @@ as.h5ad(data, "output.h5ad")
 #### 2. 1CellBio → Seurat（用于R分析）
 
 ```r
+# 加载必要的包
+library(Seurat)  # 必须先加载Seurat包
+library(ICellbioRpy)
+
 # 读取数据
-data <- read1Cellbio("path/to/1cellbio_results.zip")
+data <- read1Cellbio("1Cellbio_results.zip")
 
-# 转换为Seurat对象（需要指定基因名和细胞名列）
-# 函数会自动显示所有可用的列名供参考
-seurat_obj <- as.Seurat.1CB(data, 
-                           rownames = "id",        # 基因名列
-                           colnames = "cell_id")   # 细胞名列
+# 转换为Seurat对象
+seurat_obj <- as.Seurat(data,
+                       rownames = "id",         # 基因名列
+                       colnames = "cell_id")    # 细胞名列
 
-# 可视化
-library(Seurat)
-DimPlot(seurat_obj, reduction = "umap", group.by = "level1class")
+# 转换为SingleCellExperiment对象
+sce_obj <- as.SingleCellExperiment(data,
+                                  rownames = "id",         # 基因名列
+                                  colnames = "cell_id")    # 细胞名列
+
+# 查看转换结果
+print(seurat_obj)  # 显示Seurat对象信息
+head(rownames(seurat_obj))  # 查看基因名
+head(colnames(seurat_obj))  # 查看细胞名
+
+# 可视化（如果数据包含UMAP等降维结果）
+# DimPlot(seurat_obj, reduction = "umap", group.by = "level1class")
 ```
 
 **💡 重要提示：**

@@ -11,6 +11,14 @@
   ...,
   name_conflict = c("make_unique", "error")
 )
+
+\method{as.Seurat}{`1CellbioData`}(
+  object,
+  rownames = NULL,
+  colnames = NULL,
+  ...,
+  name_conflict = c("make_unique", "error")
+)
 }
 \arguments{
 \item{object}{A 1CellbioData object}
@@ -23,8 +31,12 @@
 }
 \value{
 A Seurat object
+
+A Seurat object
 }
 \description{
 Convert 1CellbioData to Seurat object (DEPRECATED)
+
+S3 method for converting 1CellbioData to Seurat object
 }
 \keyword{internal}

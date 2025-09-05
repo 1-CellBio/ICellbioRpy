@@ -6,6 +6,22 @@
 library(ICellbioRpy)
 library(ggplot2)
 
+gef_to_h5ad("../C04042E3.cellbin.gef", 
+            '../stereo_100cells.h5ad',
+            bin_type = c("cell_bins"),
+            layer = c("counts"),
+            max_cells = 1000,
+            region = NULL,
+            gene_list = NULL,
+            include_cellborder = TRUE,
+            include_spatial = TRUE,
+            overwrite = FALSE,
+            name_conflict = c("make_unique"),
+            verbose = TRUE)
+
+
+
+
 # Example 1: Basic GEF file reading
 # Read cellbin GEF file with cell borders
 cat("Reading GEF file...\n")

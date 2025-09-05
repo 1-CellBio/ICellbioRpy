@@ -23,11 +23,9 @@ if (length(missing_packages) > 0) {
 ## 第1步: 安装和加载包
 
 ```r
-# 加载ICellbioRpy包
+# 加载必需包（注意顺序很重要）
+library(Seurat)  # 必须先加载Seurat包
 library(ICellbioRpy)
-
-# 加载Seurat和其他必需包
-library(Seurat)
 library(Matrix)
 library(dplyr)
 library(ggplot2)
@@ -113,7 +111,7 @@ cat("数据类型:", class(cellbio_data), "\n")
 # 如果想提前查看可用的列名，可以尝试不带参数调用函数
 # 这会显示错误消息，但同时也会显示所有可用的列名
 tryCatch({
-  as.Seurat.1CB(cellbio_data)
+  as.Seurat(cellbio_data)
 }, error = function(e) {
   cat("显示了可用的列名信息\n")
 })
@@ -126,9 +124,9 @@ tryCatch({
 ```r
 # 转换为Seurat对象（需要指定基因名和细胞名列）
 # 首次调用时，函数会自动显示所有可用的列名
-seurat_obj <- as.Seurat.1CB(cellbio_data,
-                           rownames = "id",        # 基因名列
-                           colnames = "cell_id")   # 细胞名列
+seurat_obj <- as.Seurat(cellbio_data,
+                       rownames = "id",        # 基因名列
+                       colnames = "cell_id")   # 细胞名列
 
 cat("✓ 转换为Seurat对象完成！\n")
 ```
@@ -428,6 +426,6 @@ colnames(seurat_obj@meta.data)
 ---
 
 **需要帮助？**
-- 查看函数帮助: `?read1Cellbio`, `?as.Seurat.1CB`
+- 查看函数帮助: `?read1Cellbio`, `?as.Seurat`
 - Seurat帮助: `vignette("seurat")`
 - 项目Issues: [GitHub地址]

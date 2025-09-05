@@ -69,7 +69,7 @@ check_anndata_available()
 
 ```r
 # 从zip文件读取1Cellbio结果
-data <- read1Cellbio("1cellbio_results.zip")
+data <- read1Cellbio("1Cellbio_results.zip")
 
 # 查看数据结构
 class(data)
@@ -86,9 +86,9 @@ print(data)
 ```r
 # 转换为SCE对象（需要指定基因名和细胞名列）
 # 函数会自动显示所有可用的列名供参考
-sce <- as.SingleCellExperiment.1CB(data,
-                                  rownames = "id",        # 基因名列
-                                  colnames = "cell_id")   # 细胞名列
+sce <- as.SingleCellExperiment(data,
+                              rownames = "id",        # 基因名列
+                              colnames = "cell_id")   # 细胞名列
 
 # 查看数据
 sce
@@ -108,7 +108,9 @@ pca_coords <- reducedDim(sce, "PCA")
 
 ```r
 # 转换为Seurat对象
-seurat <- as.Seurat.1CB(data)
+seurat <- as.Seurat(data,
+                   rownames = "id",        # 基因名列
+                   colnames = "cell_id")   # 细胞名列
 
 # 查看数据
 seurat
@@ -310,10 +312,10 @@ data <- read1Cellbio("results.zip")
 
 # 3. 根据需要选择格式
 if (use_bioconductor) {
-  sce <- as.SingleCellExperiment.1CB(data, rownames = "id", colnames = "cell_id")
+  sce <- as.SingleCellExperiment(data, rownames = "id", colnames = "cell_id")
   # Bioconductor分析...
 } else if (use_seurat) {
-  seurat <- as.Seurat.1CB(data, rownames = "id", colnames = "cell_id")
+  seurat <- as.Seurat(data, rownames = "id", colnames = "cell_id")
   # Seurat分析...
 } else if (use_python) {
   iCellbio2H5ad("results.zip", "analysis.h5ad")
