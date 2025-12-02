@@ -4,16 +4,24 @@
 \alias{as.Seurat.1CB.1CellbioData}
 \title{S3 method for converting 1CellbioData to Seurat object}
 \usage{
-\method{as.Seurat}{`1CB.1CellbioData`}(object, ...)
+\method{as.Seurat.1CB}{`1CellbioData`}(
+  object,
+  rownames = NULL,
+  colnames = NULL,
+  auto_detect = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{A 1CellbioData object}
 
-\item{...}{Additional arguments (not used)}
+\item{rownames}{Character string specifying the column name in row data to use as gene names (optional)}
 
-\item{rownames}{Character string specifying the column name in row data to use as gene names (required)}
+\item{colnames}{Character string specifying the column name in column data to use as cell names (optional)}
 
-\item{colnames}{Character string specifying the column name in column data to use as cell names (required)}
+\item{auto_detect}{Logical. Whether to attempt automatic detection of column names}
+
+\item{...}{Additional arguments passed to the conversion function}
 }
 \value{
 A Seurat object

@@ -2,7 +2,7 @@
 % Please edit documentation in R/read1Cellbio.R
 \name{as.SingleCellExperiment.1CellbioData}
 \alias{as.SingleCellExperiment.1CellbioData}
-\title{S3 method for converting 1CellbioData to SingleCellExperiment object}
+\title{Convert 1CellbioData to SingleCellExperiment object (DEPRECATED)}
 \usage{
 \method{as.SingleCellExperiment}{`1CellbioData`}(
   object,
@@ -25,5 +25,6 @@
 A SingleCellExperiment object
 }
 \description{
-S3 method for converting 1CellbioData to SingleCellExperiment object
+Convert 1CellbioData to SingleCellExperiment object (DEPRECATED)
 }
+\keyword{internal}

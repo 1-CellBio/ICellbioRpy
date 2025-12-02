@@ -4,16 +4,44 @@
 \alias{as.SingleCellExperiment.1CB}
 \title{Convert 1CellbioData to SingleCellExperiment object}
 \usage{
-as.SingleCellExperiment.1CB(object, ...)
+as.SingleCellExperiment.1CB(
+  object,
+  rownames = NULL,
+  colnames = NULL,
+  auto_detect = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{A 1CellbioData object}
 
-\item{...}{Additional arguments (not used)}
+\item{rownames}{Character string specifying the column name in row data to use as gene names. If NULL, will auto-detect.}
+
+\item{colnames}{Character string specifying the column name in column data to use as cell names. If NULL, will auto-detect.}
+
+\item{auto_detect}{Logical. Whether to attempt automatic detection of column names (default: TRUE)}
+
+\item{...}{Additional arguments passed to the deprecated function}
 }
 \value{
 A SingleCellExperiment object
 }
 \description{
-Convert 1CellbioData to SingleCellExperiment object
+This function converts 1CellbioData objects to SingleCellExperiment objects
+with automatic detection of gene and cell identifier columns.
+}
+\examples{
+\dontrun{
+# Load 1Cellbio data
+data <- read1Cellbio("results.zip")
+
+# Convert with auto-detection (recommended)
+sce_obj <- as.SingleCellExperiment.1CB(data)
+
+# Or specify columns manually
+sce_obj <- as.SingleCellExperiment.1CB(data, rownames = "id", colnames = "cell_id")
+
+# Show available column options
+show_column_options(data)
+}
 }

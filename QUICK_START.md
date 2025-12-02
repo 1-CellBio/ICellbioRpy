@@ -84,16 +84,31 @@ print(data)
 #### 转换为SingleCellExperiment
 
 ```r
-# 转换为SCE对象（需要指定基因名和细胞名列）
-# 函数会自动显示所有可用的列名供参考
+# 方法1：使用新的.1CB函数（推荐，自动检测列名）
+sce <- as.SingleCellExperiment.1CB(data)
+
+# 方法2：手动指定列名
 sce <- as.SingleCellExperiment(data,
                               rownames = "id",        # 基因名列
                               colnames = "cell_id")   # 细胞名列
 
+# 方法3：查看可用选项后再转换
+show_column_options(data)
+# 这会显示：
+# === Column Detection Results ===
+#
+# Available gene identifier columns (rownames):
+#   id, gene_symbol, gene_name
+#   → Detected: id
+#
+# Available cell identifier columns (colnames):
+#   cell_id, barcode, sample_id
+#   → Detected: cell_id
+
 # 查看数据
 sce
-#> class: SingleCellExperiment 
-#> dim: 20000 3000 
+#> class: SingleCellExperiment
+#> dim: 20000 3000
 #> assays(2): counts logcounts
 #> reducedDims(3): PCA TSNE UMAP
 
@@ -107,14 +122,23 @@ pca_coords <- reducedDim(sce, "PCA")
 #### 转换为Seurat对象
 
 ```r
-# 转换为Seurat对象
+# 方法1：使用新的.1CB函数（推荐，自动检测列名）
+seurat <- as.Seurat.1CB(data)
+
+# 方法2：手动指定列名
 seurat <- as.Seurat(data,
                    rownames = "id",        # 基因名列
                    colnames = "cell_id")   # 细胞名列
 
+# 方法3：关闭自动检测并指定列名
+seurat <- as.Seurat.1CB(data,
+                        rownames = "specific_gene_col",
+                        colnames = "specific_cell_col",
+                        auto_detect = FALSE)
+
 # 查看数据
 seurat
-#> An object of class Seurat 
+#> An object of class Seurat
 #> 20000 features across 3000 samples
 
 # 访问数据
@@ -260,6 +284,31 @@ names(sce_list) <- gsub(".h5ad", "", basename(h5ad_files))
 
 ## 🛠️ 故障排除
 
+### 列名检测问题
+
+```r
+# 如果自动检测失败，首先查看可用选项
+show_column_options(data)
+
+# 常见错误和解决方法：
+# 错误："Cannot detect gene identifier column"
+# 解决：手动指定基因名列
+sce <- as.SingleCellExperiment.1CB(data, rownames = "gene_name", colnames = "cell_id")
+
+# 错误："Column 'xxx' not found"
+# 解决：查看正确的列名
+show_column_options(data)
+# 或手动检查
+# coldata <- data$experiment$summarized_experiment$column_data$resource
+# rowdata <- data$experiment$summarized_experiment$row_data$resource
+
+# 关闭自动检测，完全手动控制
+sce <- as.SingleCellExperiment.1CB(data,
+                                    rownames = "your_gene_col",
+                                    colnames = "your_cell_col",
+                                    auto_detect = FALSE)
+```
+
 ### Python环境问题
 
 ```r
@@ -312,15 +361,28 @@ data <- read1Cellbio("results.zip")
 
 # 3. 根据需要选择格式
 if (use_bioconductor) {
-  sce <- as.SingleCellExperiment(data, rownames = "id", colnames = "cell_id")
+  # 新版本：自动检测列名（推荐）
+  sce <- as.SingleCellExperiment.1CB(data)
+
+  # 旧版本：手动指定列名
+  # sce <- as.SingleCellExperiment(data, rownames = "id", colnames = "cell_id")
+
   # Bioconductor分析...
 } else if (use_seurat) {
-  seurat <- as.Seurat(data, rownames = "id", colnames = "cell_id")
+  # 新版本：自动检测列名（推荐）
+  seurat <- as.Seurat.1CB(data)
+
+  # 旧版本：手动指定列名
+  # seurat <- as.Seurat(data, rownames = "id", colnames = "cell_id")
+
   # Seurat分析...
 } else if (use_python) {
   iCellbio2H5ad("results.zip", "analysis.h5ad")
   # Python/Scanpy分析...
 }
+
+# 4. 查看可用列选项（如果自动检测失败）
+# show_column_options(data)
 ```
 
 ### 2. 性能优化

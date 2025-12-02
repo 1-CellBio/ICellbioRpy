@@ -145,17 +145,17 @@ safe_convert_to_h5ad <- function(zip_file, output_file) {
 ```{r name-conflicts-advanced}
 # Strict mode - error on duplicates
 tryCatch({
-  seurat_obj <- as.Seurat(
-    data,
-    rownames = "id",
+  seurat_obj <- as.Seurat.1CB(
+    data, 
+    rownames = "gene_id", 
     colnames = "cell_id",
     name_conflict = "error"
   )
 }, error = function(e) {
   message("Duplicate names detected, switching to make_unique mode")
-  seurat_obj <- as.Seurat(
-    data,
-    rownames = "id",
+  seurat_obj <- as.Seurat.1CB(
+    data, 
+    rownames = "gene_id", 
     colnames = "cell_id",
     name_conflict = "make_unique"
   )
@@ -317,9 +317,9 @@ iCellbio2H5ad(zip_file, h5ad_file, rownames = "gene_id", colnames = "cell_id")
 
 ```{r troubleshoot-names}
 # Always use make_unique for robustness:
-obj <- as.Seurat(data,
-                rownames = "id",
-                colnames = "cell_id",
-                name_conflict = "make_unique")
+obj <- as.Seurat.1CB(data, 
+                     rownames = "gene_id", 
+                     colnames = "cell_id",
+                     name_conflict = "make_unique")
 ```
 

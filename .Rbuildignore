@@ -1,0 +1,20 @@
+# Exclude all tsv.gz files from data directory
+data/10090_*.tsv.gz
+data/10116_*.tsv.gz
+data/6239_*.tsv.gz
+data/7227_*.tsv.gz
+data/7955_*.tsv.gz
+data/9598_*.tsv.gz
+data/9606_*.tsv.gz
+# Keep RData files
+!data/*.RData
+
+# Exclude test files
+^test_.*$
+^.*\.log$
+^\.DS_Store$
+
+# Exclude development files
+^README_GMT_Optimization\.md$
+^GMT_Optimized_Usage_Example\.R$
+^QUALITY_ASSURANCE_REPORT\.md$

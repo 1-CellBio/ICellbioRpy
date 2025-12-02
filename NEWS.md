@@ -3,9 +3,8 @@
 ## Major Improvements
 
 ### API Consistency and Cleanup
-* **BREAKING**: Deprecated `as.Seurat.1CellbioData()` and `as.SingleCellExperiment.1CellbioData()`
-* **NEW**: Unified API with `as.Seurat()` and `as.SingleCellExperiment()`
-* **UPDATE**: Simplified function calls - no need for `.1CB` suffix
+* **BREAKING**: Deprecated `as.Seurat.1CellbioData()` and `as.SingleCellExperiment.1CellbioData()` 
+* **NEW**: Unified API with `as.Seurat.1CB()` and `as.SingleCellExperiment.1CB()`
 * Cleaned up NAMESPACE exports to reduce confusion
 * Added deprecation warnings for old functions
 

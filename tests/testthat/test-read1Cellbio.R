@@ -67,20 +67,28 @@ test_that("1CellbioData object structure is correct", {
   expect_true("single_cell_experiment" %in% names(mock_data$experiment))
 })
 
-test_that("as.Seurat function exists and has correct signature", {
+test_that("as.Seurat.1CB function exists and has correct signature", {
   # Check that the function exists
-  expect_true(exists("as.Seurat"))
+  expect_true(exists("as.Seurat.1CB"))
 
-  # Check that it's a generic function
-  expect_true(isGeneric("as.Seurat"))
+  # Check that it's an S3 generic function (uses UseMethod)
+  func_body <- body(as.Seurat.1CB)
+  expect_true(any(grepl("UseMethod", as.character(func_body))))
+
+  # Check that the S3 method exists
+  expect_true(exists("as.Seurat.1CB.1CellbioData"))
 })
 
-test_that("as.SingleCellExperiment function exists and has correct signature", {
+test_that("as.SingleCellExperiment.1CB function exists and has correct signature", {
   # Check that the function exists
-  expect_true(exists("as.SingleCellExperiment"))
+  expect_true(exists("as.SingleCellExperiment.1CB"))
 
-  # Check that it's a generic function
-  expect_true(isGeneric("as.SingleCellExperiment"))
+  # Check that it's an S3 generic function (uses UseMethod)
+  func_body <- body(as.SingleCellExperiment.1CB)
+  expect_true(any(grepl("UseMethod", as.character(func_body))))
+
+  # Check that the S3 method exists
+  expect_true(exists("as.SingleCellExperiment.1CB.1CellbioData"))
 })
 
 test_that("deprecated functions show appropriate warnings", {

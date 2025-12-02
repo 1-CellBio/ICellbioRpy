@@ -84,15 +84,31 @@ print(data)
 #### Convert to SingleCellExperiment
 
 ```r
-# Convert to SCE object
+# Method 1: Using new .1CB functions (recommended, auto-detects column names)
+sce <- as.SingleCellExperiment.1CB(data)
+
+# Method 2: Manually specify column names
 sce <- as.SingleCellExperiment(data,
                               rownames = "id",        # gene name column
                               colnames = "cell_id")   # cell name column
 
+# Method 3: View available options before converting
+show_column_options(data)
+# This will display:
+# === Column Detection Results ===
+#
+# Available gene identifier columns (rownames):
+#   id, gene_symbol, gene_name
+#   → Detected: id
+#
+# Available cell identifier columns (colnames):
+#   cell_id, barcode, sample_id
+#   → Detected: cell_id
+
 # View data
 sce
-#> class: SingleCellExperiment 
-#> dim: 20000 3000 
+#> class: SingleCellExperiment
+#> dim: 20000 3000
 #> assays(2): counts logcounts
 #> reducedDims(3): PCA TSNE UMAP
 
@@ -106,14 +122,23 @@ pca_coords <- reducedDim(sce, "PCA")
 #### Convert to Seurat Object
 
 ```r
-# Convert to Seurat object
+# Method 1: Using new .1CB functions (recommended, auto-detects column names)
+seurat <- as.Seurat.1CB(data)
+
+# Method 2: Manually specify column names
 seurat <- as.Seurat(data,
                    rownames = "id",        # gene name column
                    colnames = "cell_id")   # cell name column
 
+# Method 3: Disable auto-detection and specify columns
+seurat <- as.Seurat.1CB(data,
+                        rownames = "specific_gene_col",
+                        colnames = "specific_cell_col",
+                        auto_detect = FALSE)
+
 # View data
 seurat
-#> An object of class Seurat 
+#> An object of class Seurat
 #> 20000 features across 3000 samples
 
 # Access data
@@ -259,6 +284,31 @@ names(sce_list) <- gsub(".h5ad", "", basename(h5ad_files))
 
 ## 🛠️ Troubleshooting
 
+### Column Detection Issues
+
+```r
+# If auto-detection fails, first view available options
+show_column_options(data)
+
+# Common errors and solutions:
+# Error: "Cannot detect gene identifier column"
+# Solution: Manually specify gene column
+sce <- as.SingleCellExperiment.1CB(data, rownames = "gene_name", colnames = "cell_id")
+
+# Error: "Column 'xxx' not found"
+# Solution: View correct column names
+show_column_options(data)
+# Or check manually
+# coldata <- data$experiment$summarized_experiment$column_data$resource
+# rowdata <- data$experiment$summarized_experiment$row_data$resource
+
+# Disable auto-detection for full manual control
+sce <- as.SingleCellExperiment.1CB(data,
+                                    rownames = "your_gene_col",
+                                    colnames = "your_cell_col",
+                                    auto_detect = FALSE)
+```
+
 ### Python Environment Issues
 
 ```r
@@ -311,15 +361,28 @@ data <- read1Cellbio("results.zip")
 
 # 3. Choose format based on needs
 if (use_bioconductor) {
-  sce <- as.SingleCellExperiment(data, rownames = "id", colnames = "cell_id")
+  # New version: auto-detect column names (recommended)
+  sce <- as.SingleCellExperiment.1CB(data)
+
+  # Old version: manually specify column names
+  # sce <- as.SingleCellExperiment(data, rownames = "id", colnames = "cell_id")
+
   # Bioconductor analysis...
 } else if (use_seurat) {
-  seurat <- as.Seurat(data, rownames = "id", colnames = "cell_id")
+  # New version: auto-detect column names (recommended)
+  seurat <- as.Seurat.1CB(data)
+
+  # Old version: manually specify column names
+  # seurat <- as.Seurat(data, rownames = "id", colnames = "cell_id")
+
   # Seurat analysis...
 } else if (use_python) {
   iCellbio2H5ad("results.zip", "analysis.h5ad")
   # Python/Scanpy analysis...
 }
+
+# 4. View available column options (if auto-detection fails)
+# show_column_options(data)
 ```
 
 ### 2. Performance Optimization

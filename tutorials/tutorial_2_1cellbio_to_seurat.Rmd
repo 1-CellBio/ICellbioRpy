@@ -127,10 +127,8 @@ cat("数据类型:", class(cellbio_data), "\n")
 现在将1CellbioData对象转换为Seurat对象：
 
 ```{r convert-to-seurat}
-# 转换为Seurat对象（需要指定基因名和细胞名列）
-seurat_obj <- as.Seurat(cellbio_data,
-                       rownames = "id",        # 基因名列
-                       colnames = "cell_id")   # 细胞名列
+# 方法1: 使用新的转换函数（推荐）
+seurat_obj <- as.Seurat.1CB(cellbio_data)
 
 # 或者方法2: 使用原始转换函数
 # seurat_obj <- as.Seurat.1CellbioData(cellbio_data)
@@ -427,6 +425,6 @@ colnames(seurat_obj@meta.data)
 ---
 
 **需要帮助？**
-- 查看函数帮助: `?read1Cellbio`, `?as.Seurat`
+- 查看函数帮助: `?read1Cellbio`, `?as.Seurat.1CB`
 - Seurat帮助: `vignette("seurat")`
 - 项目Issues: [GitHub地址]
