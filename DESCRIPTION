@@ -1,7 +1,7 @@
 Package: ICellbioRpy
 Type: Package
 Title: Read and Convert 1CellBio Results and Stereo-seq GEF Files to Seurat, SingleCellExperiment and H5AD
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: 
     c(
       person("1Cellbio", "Team", email = "508858100@qq.com",
