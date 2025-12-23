@@ -31,6 +31,74 @@ options(ICellbioRpy.lang = "zh")
 options(ICellbioRpy.lang = "en")
 ```
 
+## Smart Python Environment Management
+
+### Interactive Environment Selection
+
+The `smart_python_config()` function provides intelligent environment detection and selection:
+
+```{r smart-python-config}
+# Automatic detection and interactive selection
+smart_python_config(verbose = TRUE, interactive = TRUE)
+
+# Output example:
+# 📋 Found multiple environments with anndata:
+#   1. 1cellbio (anndata 0.12.0)
+#   2. atlas (anndata 0.11.3)
+#   3. scanpy (anndata 0.10.9)
+# Please select environment to use (1-3):
+```
+
+If only one environment has anndata, it will be auto-selected. If multiple exist, you'll be prompted to choose.
+
+### Multiple Python Environments
+
+```{r multi-python-env}
+# Configure specific environment for different projects
+configure_python_env(conda_env = "scanpy_env", verbose = TRUE)
+
+# Switch environments mid-session if needed
+configure_python_env(conda_env = "another_env", verbose = TRUE)
+
+# Check current environment status
+check_anndata_available()
+```
+
+### Environment Validation
+
+```{r env-validation}
+# Comprehensive environment check
+validate_environment <- function() {
+  cat("=== Environment Validation ===\n")
+
+  # Check Python configuration
+  cat("Python environment: ")
+  if (check_anndata_available()) {
+    cat("✓ OK\n")
+  } else {
+    cat("✗ Failed\n")
+    cat("Please run: configure_python_env(conda_env = 'your_env')\n")
+    return(FALSE)
+  }
+
+  # Check required R packages
+  required_packages <- c("Matrix", "Seurat", "SingleCellExperiment")
+  for (pkg in required_packages) {
+    cat("R package", pkg, ": ")
+    if (requireNamespace(pkg, quietly = TRUE)) {
+      cat("✓ OK\n")
+    } else {
+      cat("✗ Missing\n")
+    }
+  }
+
+  return(TRUE)
+}
+
+# Run validation
+validate_environment()
+```
+
 ## Large Dataset Optimization
 
 ### Memory-Efficient Conversions
@@ -55,7 +123,7 @@ sce <- h5ad_to_sce("large_data.h5ad", use_x_as = "auto")
 ```{r multi-assays}
 # Convert Seurat object with multiple assays
 seurat_to_h5ad(
-  seurat_obj, 
+  seurat_obj,
   "output.h5ad",
   default_assay = "RNA",           # Main assay for X matrix
   layer = "data",                  # Use normalized data
@@ -64,6 +132,148 @@ seurat_to_h5ad(
 
 # All other assays will be stored as layers in the H5AD file
 ```
+
+## Stereo-seq Spatial Transcriptomics
+
+### Reading Large GEF Files
+
+For large Stereo-seq GEF files, use memory-optimized reading strategies:
+
+```{r large-gef}
+# Memory-optimized reading with cell limit
+stereo_subset <- read_gef(
+  "large_sample.cellbin.gef",
+  max_cells = 5000,                           # Limit cell count
+  region = c(1000, 5000, 1000, 5000),        # Spatial region filter
+  gene_list = c("EPCAM", "KRT8", "VIM")      # Gene filter
+)
+
+# Read specific spatial region only
+stereo_region <- read_gef(
+  "sample.gef",
+  region = c(1000, 3000, 1000, 3000),  # minX, maxX, minY, maxY
+  include_cellborder = TRUE
+)
+```
+
+### Direct GEF to H5AD Conversion
+
+```{r gef-to-h5ad-advanced}
+# Direct conversion with full options (memory efficient)
+gef_to_h5ad(
+  gef_file = "sample.cellbin.gef",
+  h5ad_file = "output.h5ad",
+  bin_type = "cell_bins",
+  include_cellborder = TRUE,    # cell_borders stored in adata.uns
+  include_spatial = TRUE,       # spatial coordinates stored in adata.obsm
+  max_cells = 10000,            # memory management
+  region = c(1000, 5000, 1000, 5000),      # spatial region filter
+  gene_list = c("GAPDH", "ACTB", "CD45"),  # gene filter
+  overwrite = TRUE
+)
+```
+
+### Spatial Visualization with Customization
+
+```{r spatial-viz-advanced}
+# Advanced spatial visualization with cell borders
+plot_cells_with_borders(
+  stereo_data,
+  color_by = "cluster",        # Color by cluster or gene expression
+  show_borders = TRUE,         # Show cell boundaries
+  border_color = "white",      # Border color
+  border_size = 0.5,           # Border line width
+  point_size = 1,              # Cell point size
+  alpha = 0.8                  # Transparency
+)
+
+# Color by gene expression
+plot_cells_with_borders(
+  stereo_data,
+  color_by = "EPCAM",
+  show_borders = TRUE,
+  border_color = "black"
+)
+```
+
+### Using Square Bins (Without Cell Segmentation)
+
+```{r stereo-bins}
+# Use square bins instead of cell segmentation
+stereo_bins <- read_gef(
+  "sample.gef",
+  bin_type = "bins",
+  bin_size = 50  # 50x50 pixel bins
+)
+
+# Convert bins to H5AD
+gef_to_h5ad(
+  "sample.gef",
+  "bins_output.h5ad",
+  bin_type = "bins",
+  bin_size = 50
+)
+```
+
+## GMT Gene Set Batch Processing
+
+### Performance Optimization with Pre-built Tables
+
+For processing multiple GMT files, pre-build gene lookup tables for significant performance gains:
+
+```{r gmt-batch-advanced}
+# Step 1: Pre-build lookup tables for all species
+prebuild_gene_lookup_tables(
+  data_dir = "~/gene_mapping_data",
+  output_file = "gene_lookup_tables.rdata"
+)
+
+# Step 2: Load into global environment (creates master_lookup_tables variable)
+load("gene_lookup_tables.rdata")
+
+# Step 3: Batch process multiple GMT files
+gmt_files <- list.files(pattern = "\\.gmt$")
+for (gmt in gmt_files) {
+  output_dir <- gsub("\\.gmt$", "_gesel", gmt)
+  preprocess_gmt_custom(
+    gmt_file = gmt,
+    species = "9606",          # or "10090" for mouse
+    output_dir = output_dir
+  )
+  cat("Processed:", gmt, "\n")
+}
+```
+
+### Custom Gene Mapping Files
+
+```{r gmt-custom}
+# Use with custom gene mapping files
+preprocess_gmt_with_custom_mapping(
+  gmt_file = "custom_pathways.gmt",
+  species = "10090",  # Mouse
+  gene_mapping_files = list(
+    symbol = "mouse_symbols.tsv",
+    entrez = "mouse_entrez.tsv",
+    ensembl = "mouse_ensembl.tsv"
+  ),
+  collection_name = "mouse_pathways",
+  collection_desc = "Custom mouse pathways",
+  output_dir = "mouse_gesel",
+  auto_download_missing = TRUE  # Auto-download missing mapping files
+)
+```
+
+### Supported Species
+
+| Species ID | Species Name |
+|------------|--------------|
+| 9606 | Human (Homo sapiens) |
+| 10090 | Mouse (Mus musculus) |
+| 10116 | Rat (Rattus norvegicus) |
+| 7227 | Fruit fly (Drosophila melanogaster) |
+| 6239 | Nematode (Caenorhabditis elegans) |
+| 7955 | Zebrafish (Danio rerio) |
+| 9598 | Chimpanzee (Pan troglodytes) |
 
 ## Batch Processing Workflows
 
@@ -76,13 +286,13 @@ process_multiple_1cellbio <- function(zip_files, output_dir) {
     # Extract sample name from filename
     sample_name <- tools::file_path_sans_ext(basename(zip_file))
     output_h5ad <- file.path(output_dir, paste0(sample_name, ".h5ad"))
-    
-    # Convert to H5AD
+
+    # Convert to H5AD with auto-detection
     iCellbio2H5ad(
       zip_file = zip_file,
       h5ad_path = output_h5ad,
-      rownames = "gene_id",
-      colnames = "cell_id"
+      overwrite = FALSE,
+      name_conflict = "make_unique"
     )
   }
 }
@@ -100,7 +310,7 @@ sample_info <- data.frame(
   Sample_id = c("ctrl_1", "ctrl_2", "treat_1", "treat_2"),
   condition = c("control", "control", "treatment", "treatment"),
   batch = c("batch1", "batch2", "batch1", "batch2"),
-  mtx_fns = c("ctrl1/matrix.mtx.gz", "ctrl2/matrix.mtx.gz", 
+  mtx_fns = c("ctrl1/matrix.mtx.gz", "ctrl2/matrix.mtx.gz",
               "treat1/matrix.mtx.gz", "treat2/matrix.mtx.gz"),
   features_fns = c("ctrl1/features.tsv.gz", "ctrl2/features.tsv.gz",
                    "treat1/features.tsv.gz", "treat2/features.tsv.gz"),
@@ -117,6 +327,30 @@ read_10x_mtx_to_h5ad(
 )
 ```
 
+### Batch Stereo-seq Processing
+
+```{r batch-stereo}
+# Process multiple GEF files
+gef_files <- list.files(pattern = "\\.gef$", full.names = TRUE)
+
+for (gef_file in gef_files) {
+  output_name <- gsub("\\.gef$", ".h5ad", basename(gef_file))
+
+  # Direct conversion with memory management
+  gef_to_h5ad(
+    gef_file = gef_file,
+    h5ad_file = file.path("output", output_name),
+    bin_type = "cell_bins",
+    include_cellborder = TRUE,
+    include_spatial = TRUE,
+    max_cells = 10000,  # Memory limit
+    overwrite = FALSE
+  )
+
+  cat("Converted:", gef_file, "\n")
+}
+```
+
 ## Error Handling and Troubleshooting
 
 ### Robust File Processing
@@ -128,9 +362,8 @@ safe_convert_to_h5ad <- function(zip_file, output_file) {
     iCellbio2H5ad(
       zip_file = zip_file,
       h5ad_path = output_file,
-      rownames = "gene_id",
-      colnames = "cell_id",
-      overwrite = TRUE
+      overwrite = TRUE,
+      name_conflict = "make_unique"
     )
     message("✓ Successfully converted: ", basename(zip_file))
   }, error = function(e) {
@@ -140,76 +373,42 @@ safe_convert_to_h5ad <- function(zip_file, output_file) {
 }
 ```
 
+### Column Auto-Detection Fallback
+
+```{r column-detection-advanced}
+# When column detection fails, auto-selects first column with bilingual warning
+seurat_obj <- as.Seurat.1CB(data)  # auto-detects columns
+
+# View available columns if auto-detection is unclear
+show_column_options(data)
+
+# Manually specify if needed
+seurat_obj <- as.Seurat.1CB(data,
+                           rownames = "gene_id",
+                           colnames = "cell_id",
+                           auto_detect = FALSE)
+```
+
 ### Name Conflict Strategies
 
 ```{r name-conflicts-advanced}
 # Strict mode - error on duplicates
 tryCatch({
   seurat_obj <- as.Seurat.1CB(
-    data, 
-    rownames = "gene_id", 
+    data,
+    rownames = "gene_id",
     colnames = "cell_id",
     name_conflict = "error"
   )
 }, error = function(e) {
   message("Duplicate names detected, switching to make_unique mode")
   seurat_obj <- as.Seurat.1CB(
-    data, 
-    rownames = "gene_id", 
+    data,
+    rownames = "gene_id",
     colnames = "cell_id",
     name_conflict = "make_unique"
   )
 })
-```
-
-## Environment Management
-
-### Multiple Python Environments
-
-```{r multi-python-env}
-# Configure specific environment for different projects
-configure_python_env(conda_env = "scanpy_env", verbose = TRUE)
-
-# Switch environments mid-session if needed
-configure_python_env(conda_env = "another_env", verbose = TRUE)
-
-# Check current environment status
-check_anndata_available()
-```
-
-### Environment Validation
-
-```{r env-validation}
-# Comprehensive environment check
-validate_environment <- function() {
-  cat("=== Environment Validation ===\n")
-  
-  # Check Python configuration
-  cat("Python environment: ")
-  if (check_anndata_available()) {
-    cat("✓ OK\n")
-  } else {
-    cat("✗ Failed\n")
-    cat("Please run: configure_python_env(conda_env = 'your_env')\n")
-    return(FALSE)
-  }
-  
-  # Check required R packages
-  required_packages <- c("Matrix", "Seurat", "SingleCellExperiment")
-  for (pkg in required_packages) {
-    cat("R package", pkg, ": ")
-    if (requireNamespace(pkg, quietly = TRUE)) {
-      cat("✓ OK\n")
-    } else {
-      cat("✗ Missing\n")
-    }
-  }
-  
-  return(TRUE)
-}
-
-# Run validation
-validate_environment()
 ```
 
 ## Performance Optimization
@@ -221,17 +420,35 @@ validate_environment()
 monitor_conversion <- function(input_file, output_file) {
   start_time <- Sys.time()
   start_memory <- gc()
-  
+
   # Perform conversion
   result <- h5ad_to_seurat(input_file, verbose = TRUE)
-  
+
   end_time <- Sys.time()
   end_memory <- gc()
-  
-  cat("Conversion completed in:", 
+
+  cat("Conversion completed in:",
       round(difftime(end_time, start_time, units = "secs"), 2), "seconds\n")
-  
+
   return(result)
+}
+```
+
+### Memory Management for Large Files
+
+```{r memory-management}
+# Set memory limits for large operations
+options(future.globals.maxSize = 8000 * 1024^2)  # 8GB
+
+# Process in chunks if dataset is very large
+process_large_dataset <- function(large_file, chunk_size = 10000) {
+  # Read subset of cells
+  data <- read_gef(large_file, max_cells = chunk_size)
+
+  # Process subset
+  # ... your analysis ...
+
+  # Move to next chunk
 }
 ```
 
@@ -242,9 +459,16 @@ monitor_conversion <- function(input_file, output_file) {
 ```{r scanpy-integration}
 # After creating H5AD file, use with scanpy
 # This would be run in Python:
-# 
+#
 # import scanpy as sc
 # adata = sc.read_h5ad("output.h5ad")
+#
+# # Access spatial coordinates
+# spatial_coords = adata.obsm['spatial']
+#
+# # Access cell borders
+# cell_borders = adata.uns['cell_borders']
+#
 # sc.pp.highly_variable_genes(adata)
 # sc.tl.pca(adata)
 # sc.pl.pca_variance_ratio(adata)
@@ -262,18 +486,36 @@ sce <- h5ad_to_sce("data.h5ad")
 # plotColData(sce, "total")
 ```
 
+### Seurat Spatial Workflows
+
+```{r seurat-spatial}
+# Convert Stereo-seq data to Seurat
+stereo_data <- read_gef("sample.cellbin.gef", include_cellborder = TRUE)
+seurat_obj <- as.Seurat(stereo_data)
+
+# Use with Seurat's spatial features
+# Spatial coordinates in @reductions$spatial
+# Cell borders in @misc$cell_borders
+
+# Standard Seurat workflow continues
+seurat_obj <- NormalizeData(seurat_obj)
+seurat_obj <- FindVariableFeatures(seurat_obj)
+seurat_obj <- ScaleData(seurat_obj)
+```
+
 ## Custom Workflows
 
 ### Building Analysis Pipelines
 
 ```{r custom-pipeline}
-# Complete analysis pipeline
+# Complete analysis pipeline for 1CellBio data
 run_1cellbio_pipeline <- function(zip_file, output_dir, analysis_type = "seurat") {
   # Step 1: Convert to H5AD
   h5ad_file <- file.path(output_dir, "data.h5ad")
-  iCellbio2H5ad(zip_file, h5ad_file, 
-                rownames = "gene_id", colnames = "cell_id")
-  
+  iCellbio2H5ad(zip_file, h5ad_file,
+                overwrite = FALSE,
+                name_conflict = "make_unique")
+
   # Step 2: Convert to analysis format
   if (analysis_type == "seurat") {
     obj <- h5ad_to_seurat(h5ad_file)
@@ -282,9 +524,49 @@ run_1cellbio_pipeline <- function(zip_file, output_dir, analysis_type = "seurat"
     obj <- h5ad_to_sce(h5ad_file)
     saveRDS(obj, file.path(output_dir, "sce_object.rds"))
   }
-  
+
   return(obj)
 }
+
+# Usage
+run_1cellbio_pipeline("sample.zip", "output/", "seurat")
+```
+
+### Spatial Transcriptomics Pipeline
+
+```{r spatial-pipeline}
+# Complete Stereo-seq analysis pipeline
+run_stereo_pipeline <- function(gef_file, output_dir) {
+  # Step 1: Read GEF file with optimizations
+  stereo_data <- read_gef(
+    gef_file,
+    bin_type = "cell_bins",
+    include_cellborder = TRUE,
+    max_cells = 50000
+  )
+
+  # Step 2: Convert to H5AD for Python analysis
+  h5ad_file <- file.path(output_dir, "spatial_data.h5ad")
+  stereo_to_h5ad(stereo_data, h5ad_file, include_spatial = TRUE)
+
+  # Step 3: Convert to Seurat for R analysis
+  seurat_obj <- as.Seurat(stereo_data)
+
+  # Step 4: Create spatial visualization
+  plot_cells_with_borders(
+    stereo_data,
+    color_by = "cluster",
+    show_borders = TRUE,
+    border_color = "white"
+  )
+
+  return(list(stereo_data = stereo_data,
+              seurat_obj = seurat_obj,
+              h5ad_file = h5ad_file))
+}
+
+# Usage
+results <- run_stereo_pipeline("sample.cellbin.gef", "output/")
 ```
 
 ## Troubleshooting Common Issues
@@ -293,14 +575,17 @@ run_1cellbio_pipeline <- function(zip_file, output_dir, analysis_type = "seurat"
 
 ```{r troubleshoot-python}
 # If you get "anndata not found" errors:
-# 1. Check your conda environments:
+# 1. Use smart interactive configuration
+smart_python_config(verbose = TRUE, interactive = TRUE)
+
+# 2. Or manually check conda environments
 system("conda env list")
 
-# 2. Activate the correct environment and install anndata:
+# 3. Activate the correct environment and install anndata:
 # conda activate your_env
 # pip install anndata
 
-# 3. Reconfigure in R:
+# 4. Reconfigure in R:
 configure_python_env(conda_env = "your_env", verbose = TRUE)
 ```
 
@@ -310,16 +595,53 @@ configure_python_env(conda_env = "your_env", verbose = TRUE)
 # For very large files, use direct conversion:
 # Avoid: data -> Seurat -> H5AD
 # Use: ZIP -> H5AD directly
-iCellbio2H5ad(zip_file, h5ad_file, rownames = "gene_id", colnames = "cell_id")
+iCellbio2H5ad(zip_file, h5ad_file,
+             overwrite = FALSE,
+             name_conflict = "make_unique")
+
+# For GEF files, use region filtering
+gef_to_h5ad("large.gef", "output.h5ad",
+            region = c(1000, 5000, 1000, 5000),
+            max_cells = 10000)
 ```
 
-### Issue 3: Duplicate Names
+### Issue 3: Column Detection Failures
+
+```{r troubleshoot-columns}
+# View available columns
+show_column_options(data)
+
+# Use auto-selection with warning (recommended)
+seurat_obj <- as.Seurat.1CB(data)  # Auto-selects first column
+
+# Or manually specify
+seurat_obj <- as.Seurat.1CB(data,
+                           rownames = "gene_id",
+                           colnames = "cell_id",
+                           auto_detect = FALSE)
+```
+
+### Issue 4: Duplicate Names
 
 ```{r troubleshoot-names}
 # Always use make_unique for robustness:
-obj <- as.Seurat.1CB(data, 
-                     rownames = "gene_id", 
+obj <- as.Seurat.1CB(data,
+                     rownames = "gene_id",
                      colnames = "cell_id",
                      name_conflict = "make_unique")
 ```
 
+### Issue 5: GMT Processing Slow
+
+```{r troubleshoot-gmt}
+# Pre-build lookup tables for batch processing
+prebuild_gene_lookup_tables(
+  data_dir = "~/gene_mapping_data",
+  output_file = "gene_lookup_tables.rdata"
+)
+
+load("gene_lookup_tables.rdata")
+
+# Now process GMT files - much faster
+preprocess_gmt_custom("pathways.gmt", species = "9606")
+```

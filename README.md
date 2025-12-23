@@ -94,6 +94,9 @@ configure_python_env(conda_env = "1cellbio", verbose = TRUE)
 # 方法3：指定Python路径
 configure_python_env(python_path = "/path/to/python", verbose = TRUE)
 
+# 方法4：智能交互式配置（自动列出可用环境）
+smart_python_config(verbose = TRUE, interactive = TRUE)
+
 # 验证配置
 check_anndata_available()
 ```
@@ -272,7 +275,13 @@ sce <- h5ad_to_sce("data.h5ad", use_x_as = "counts")
 
 ### 环境配置函数
 - `configure_python_env()` - 智能Python环境配置
+- `smart_python_config()` - **新功能**：交互式环境选择，自动检测可用conda环境
 - `check_anndata_available()` - 检查anndata可用性
+
+### GMT基因集预处理函数
+- `preprocess_gmt_custom()` - **新功能**：GMT文件预处理为gesel格式
+- `preprocess_gmt_with_custom_mapping()` - 使用自定义映射文件处理GMT
+- `prebuild_gene_lookup_tables()` - **新功能**：预构建基因查找表（性能优化）
 
 ---
 

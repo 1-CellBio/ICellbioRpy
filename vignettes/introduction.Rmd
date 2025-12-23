@@ -19,12 +19,14 @@ knitr::opts_chunk$set(
 
 # ICellbioRpy
 
-The ICellbioRpy package provides comprehensive functions to work with 1Cellbio pipeline results. It enables seamless conversion between different single-cell data formats including:
+The ICellbioRpy package provides comprehensive functions to work with single-cell and spatial transcriptomics data. It enables seamless conversion between different single-cell data formats including:
 
 - Reading 1Cellbio zip files into R objects
+- Reading Stereo-seq GEF files with cell boundary information
 - Converting to SingleCellExperiment and Seurat objects
 - Converting to h5ad format for Python/Scanpy analysis
 - Bidirectional conversion between h5ad and R objects
+- GMT gene set preprocessing with gene ID mapping
 
 ## Installation
 
@@ -35,7 +37,7 @@ You can install the development version of ICellbioRpy from GitHub:
 install.packages("devtools")
 
 # Install ICellbioRpy from GitHub
-devtools::install_github("your_username/ICellbioRpy")
+devtools::install_github("1-Cellbio/ICellbioRpy")
 ```
 
 ## Quick Start
@@ -48,11 +50,14 @@ library(ICellbioRpy)
 
 ### Python Environment Configuration
 
-The package automatically configures Python environment for h5ad operations. You can also manually configure it:
+The package provides smart Python environment configuration for h5ad operations:
 
 ```{r}
 # Automatic configuration (recommended)
 configure_python_env()
+
+# Smart interactive configuration - lists available environments
+smart_python_config(verbose = TRUE, interactive = TRUE)
 
 # Manual configuration with specific Python path
 configure_python_env(python_path = "/path/to/python")
@@ -83,12 +88,21 @@ The `iCellbio2H5ad()` function converts 1Cellbio zip files directly to h5ad form
 ```{r}
 # Convert 1Cellbio zip to h5ad format
 iCellbio2H5ad("1cellbio_results.zip", "output.h5ad")
+
+# With parameter controls
+iCellbio2H5ad("1cellbio_results.zip", "output.h5ad",
+            overwrite = FALSE,           # do not overwrite existing files
+            name_conflict = "make_unique") # auto-rename on conflicts
+)
 ```
 
 ### 3. Converting to SingleCellExperiment
 
 ```{r}
-# Convert to SingleCellExperiment
+# Convert to SingleCellExperiment (new .1CB functions with auto-detection)
+sce <- as.SingleCellExperiment.1CB(data)
+
+# Or manually specify column names
 sce <- as.SingleCellExperiment(data,
                               rownames = "id",
                               colnames = "cell_id")
@@ -109,7 +123,10 @@ reducedDimNames(sce)
 ### 4. Converting to Seurat Object
 
 ```{r}
-# Convert to Seurat object
+# Convert to Seurat object (new .1CB functions with auto-detection)
+seurat <- as.Seurat.1CB(data)
+
+# Or manually specify column names
 seurat <- as.Seurat(data,
                    rownames = "id",
                    colnames = "cell_id")
@@ -123,13 +140,67 @@ names(seurat@reductions)
 #> [1] "pca"  "tsne" "umap"
 ```
 
+## Stereo-seq Spatial Transcriptomics
+
+ICellbioRpy supports reading Stereo-seq GEF files with complete cell boundary information.
+
+### Reading GEF Files
+
+```{r}
+# Read GEF file with cell boundaries
+stereo_data <- read_gef("sample1.gef",
+                        bin_type = "cell_bins",
+                        include_cellborder = TRUE)
+
+# View summary
+summary(stereo_data)
+```
+
+### Converting to R Objects
+
+```{r}
+# Convert to Seurat
+seurat_stereo <- as.Seurat(stereo_data)
+
+# Spatial coordinates in reductions
+seurat_stereo@reductions$spatial
+
+# Cell boundaries in @misc
+seurat_stereo@misc$cell_borders
+
+# Convert to SingleCellExperiment
+sce_stereo <- as.SingleCellExperiment(stereo_data)
+```
+
+### Spatial Visualization
+
+```{r}
+# Plot with cell borders
+plot_cells_with_borders(stereo_data,
+                        color_by = "cluster",
+                        show_borders = TRUE,
+                        border_color = "gray")
+```
+
+### Direct GEF to H5AD Conversion
+
+```{r}
+# Direct conversion (memory efficient)
+gef_to_h5ad("sample1.gef", "output.h5ad",
+            bin_type = "cell_bins",
+            include_cellborder = TRUE,
+            include_spatial = TRUE)
+```
+
 ## Bidirectional h5ad Conversion
 
 ### From h5ad to R Objects
 
 ```{r}
 # Convert h5ad to SingleCellExperiment
-sce <- h5ad_to_sce("data.h5ad")
+sce <- h5ad_to_sce("data.h5ad",
+                  use_x_as = "auto",            # auto-detect X layer type
+                  name_conflict = "make_unique") # naming conflict handling
 
 # Convert h5ad to Seurat
 seurat <- h5ad_to_seurat("data.h5ad")
@@ -139,8 +210,56 @@ seurat <- h5ad_to_seurat("data.h5ad")
 
 ```{r}
 # Convert Seurat object to h5ad
-seurat_to_h5ad(seurat_object, "output.h5ad")
+seurat_to_h5ad(seurat_object, "output.h5ad",
+               overwrite = FALSE,
+               name_conflict = "make_unique")
 ```
+
+## GMT Gene Set Preprocessing
+
+ICellbioRpy provides GMT file preprocessing with gene ID mapping support.
+
+### Basic Usage
+
+```{r}
+# Preprocess GMT file
+preprocess_gmt_custom(
+  gmt_file = "pathways.gmt",
+  species = "9606",          # 9606 = human
+  output_dir = "gesel_output"
+)
+```
+
+### Performance Optimization with Pre-built Tables
+
+```{r}
+# Step 1: Pre-build lookup tables for all species
+prebuild_gene_lookup_tables(
+  data_dir = "~/gene_mapping_data",
+  output_file = "gene_lookup_tables.rdata"
+)
+
+# Step 2: Load into global environment
+load("gene_lookup_tables.rdata")
+
+# Step 3: Process GMT files (auto-uses pre-built tables)
+preprocess_gmt_custom("pathways.gmt", species = "9606")
+
+# Batch process multiple GMT files
+for (gmt in list.files(pattern = "\\.gmt$")) {
+  preprocess_gmt_custom(gmt, species = "9606")
+}
+```
+
+### Supported Species
+
+- 9606: Human (Homo sapiens)
+- 10090: Mouse (Mus musculus)
+- 10116: Rat (Rattus norvegicus)
+- 7227: Fruit fly (Drosophila melanogaster)
+- 6239: Nematode (Caenorhabditis elegans)
+- 7955: Zebrafish (Danio rerio)
+- 9598: Chimpanzee (Pan troglodytes)
 
 ## Data Access and Manipulation
 
@@ -294,8 +413,26 @@ check_anndata_available()
 # Reconfigure Python environment
 configure_python_env(verbose = TRUE)
 
+# Smart configuration with environment selection
+smart_python_config(verbose = TRUE, interactive = TRUE)
+
 # Install anndata in current environment
 # (Run in terminal: pip install anndata)
+```
+
+### Column Detection Issues
+
+```{r}
+# Show available column options
+show_column_options(data)
+
+# Convert with auto-detection
+sce <- as.SingleCellExperiment.1CB(data)
+
+# Or manually specify columns
+sce <- as.SingleCellExperiment.1CB(data,
+                                    rownames = "gene_name",
+                                    colnames = "cell_id")
 ```
 
 ### Memory Considerations
@@ -315,19 +452,6 @@ object.size(sce)
 
 ## Advanced Features
 
-### Custom Python Configuration
-
-```{r}
-# Use specific conda environment
-configure_python_env(conda_env = "my_scanpy_env")
-
-# Use specific Python installation
-configure_python_env(python_path = "/usr/local/bin/python3.9")
-
-# Verbose output for debugging
-configure_python_env(verbose = TRUE)
-```
-
 ### Batch Processing
 
 ```{r}
@@ -337,6 +461,26 @@ for (zip_file in zip_files) {
   output_name <- gsub(".zip", ".h5ad", zip_file)
   iCellbio2H5ad(zip_file, output_name)
 }
+```
+
+### 10X MTX Integration
+
+```{r}
+# Prepare sample information CSV
+sample_info <- data.frame(
+  Sample_id = c("sample1", "sample2"),
+  mtx_fns = c("path/to/sample1/matrix.mtx.gz",
+             "path/to/sample2/matrix.mtx.gz"),
+  features_fns = c("path/to/sample1/features.tsv.gz",
+                  "path/to/sample2/features.tsv.gz"),
+  barcodes_fns = c("path/to/sample1/barcodes.tsv.gz",
+                   "path/to/sample2/barcodes.tsv.gz")
+)
+write.csv(sample_info, "samples.csv", row.names = FALSE)
+
+# Integrate multiple samples
+read_10x_mtx_to_h5ad("samples.csv", "integrated.h5ad",
+                     min_counts_per_cell = 200)
 ```
 
 ## Session Information

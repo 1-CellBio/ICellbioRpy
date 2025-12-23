@@ -220,8 +220,39 @@ is_python_configured <- function(verbose = TRUE) {
   return(check_anndata_available(verbose = verbose))
 }
 
+#' Automatically detect conda executable path
+#'
+#' @return Character path to conda executable, or NULL if not found
+#' @keywords internal
+detect_conda_path <- function() {
+  # First check PATH for conda
+  conda_from_path <- Sys.which("conda")
+  if (conda_from_path != "" && file.exists(conda_from_path)) {
+    return(conda_from_path)
+  }
+
+  # Check common conda installation locations
+  common_paths <- c(
+    "~/anaconda3/bin/conda",
+    "~/miniconda3/bin/conda",
+    "/usr/local/bin/conda",
+    "/opt/anaconda3/bin/conda",
+    "/opt/miniconda3/bin/conda",
+    "~/.conda/bin/conda"
+  )
+
+  for (path in common_paths) {
+    expanded <- path.expand(path)
+    if (file.exists(expanded)) {
+      return(expanded)
+    }
+  }
+
+  return(NULL)
+}
+
 #' List available conda environments with anndata
-#' 
+#'
 #' @param verbose Logical, whether to print status messages (default: TRUE)
 #' @return Data frame of conda environments with anndata availability
 #' @keywords internal
@@ -230,7 +261,17 @@ list_conda_envs_with_anndata <- function(verbose = TRUE) {
     if (verbose) cat(icb_i18n("reticulate包不可用\n", "reticulate package not available\n"))
     return(NULL)
   }
-  
+
+  # Auto-detect and set conda path for reticulate
+  conda_path <- detect_conda_path()
+  if (!is.null(conda_path)) {
+    Sys.setenv(RETICULATE_CONDA = conda_path)
+    if (verbose) cat(icb_i18n(
+      paste0("检测到conda: ", conda_path, "\n"),
+      paste0("Detected conda: ", conda_path, "\n")
+    ))
+  }
+
   # Check if conda is available
   conda_available <- tryCatch({
     conda_envs <- reticulate::conda_list()
@@ -389,7 +430,7 @@ smart_python_config <- function(verbose = TRUE, interactive = TRUE) {
     
     if (interactive && interactive()) {
       # Interactive mode: prompt user
-      cat(icb_i18n("请选择要使用的环境 (1-", "Please select environment to use (1-"), nrow(envs_with_anndata), "): ")
+      cat(icb_i18n("请选择要使用的环境 (1 -", "Please select environment to use (1 -"), nrow(envs_with_anndata), "): ")
       choice <- as.integer(readline())
       
       if (is.na(choice) || choice < 1 || choice > nrow(envs_with_anndata)) {

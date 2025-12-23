@@ -313,6 +313,7 @@ as.SingleCellExperiment.1CellbioData <- function(object, rownames = NULL, colnam
 #' @param rownames Character string specifying the column name in row data to use as gene names. If NULL, will auto-detect.
 #' @param colnames Character string specifying the column name in column data to use as cell names. If NULL, will auto-detect.
 #' @param auto_detect Logical. Whether to attempt automatic detection of column names (default: TRUE)
+#' @param verbose Logical. Whether to print messages when auto-detecting or auto-selecting columns (default: TRUE)
 #' @param ... Additional arguments passed to the deprecated function
 #' @return A Seurat object
 #' @importFrom Seurat as.Seurat
@@ -331,7 +332,7 @@ as.SingleCellExperiment.1CellbioData <- function(object, rownames = NULL, colnam
 #' # Show available column options
 #' show_column_options(data)
 #' }
-as.Seurat.1CB <- function(object, rownames = NULL, colnames = NULL, auto_detect = TRUE, ...) {
+as.Seurat.1CB <- function(object, rownames = NULL, colnames = NULL, auto_detect = TRUE, verbose = TRUE, ...) {
   UseMethod("as.Seurat.1CB")
 }
 
@@ -341,13 +342,14 @@ as.Seurat.1CB <- function(object, rownames = NULL, colnames = NULL, auto_detect 
 #' @param rownames Character string specifying the column name in row data to use as gene names (optional)
 #' @param colnames Character string specifying the column name in column data to use as cell names (optional)
 #' @param auto_detect Logical. Whether to attempt automatic detection of column names
+#' @param verbose Logical. Whether to print messages when auto-detecting or auto-selecting columns
 #' @param ... Additional arguments passed to the conversion function
 #' @return A Seurat object
 #' @method as.Seurat.1CB 1CellbioData
 #' @export
-as.Seurat.1CB.1CellbioData <- function(object, rownames = NULL, colnames = NULL, auto_detect = TRUE, ...) {
+as.Seurat.1CB.1CellbioData <- function(object, rownames = NULL, colnames = NULL, auto_detect = TRUE, verbose = TRUE, ...) {
   # Validate column names with auto-detection
-  validated <- validate_column_names(object, rownames, colnames, auto_detect)
+  validated <- validate_column_names(object, rownames, colnames, auto_detect, verbose)
 
   # Call deprecated function with validated parameters
   as.Seurat.1CellbioData(object,
@@ -365,6 +367,7 @@ as.Seurat.1CB.1CellbioData <- function(object, rownames = NULL, colnames = NULL,
 #' @param rownames Character string specifying the column name in row data to use as gene names. If NULL, will auto-detect.
 #' @param colnames Character string specifying the column name in column data to use as cell names. If NULL, will auto-detect.
 #' @param auto_detect Logical. Whether to attempt automatic detection of column names (default: TRUE)
+#' @param verbose Logical. Whether to print messages when auto-detecting or auto-selecting columns (default: TRUE)
 #' @param ... Additional arguments passed to the deprecated function
 #' @return A SingleCellExperiment object
 #' @importFrom Seurat as.SingleCellExperiment
@@ -383,7 +386,7 @@ as.Seurat.1CB.1CellbioData <- function(object, rownames = NULL, colnames = NULL,
 #' # Show available column options
 #' show_column_options(data)
 #' }
-as.SingleCellExperiment.1CB <- function(object, rownames = NULL, colnames = NULL, auto_detect = TRUE, ...) {
+as.SingleCellExperiment.1CB <- function(object, rownames = NULL, colnames = NULL, auto_detect = TRUE, verbose = TRUE, ...) {
   UseMethod("as.SingleCellExperiment.1CB")
 }
 
@@ -393,13 +396,14 @@ as.SingleCellExperiment.1CB <- function(object, rownames = NULL, colnames = NULL
 #' @param rownames Character string specifying the column name in row data to use as gene names (optional)
 #' @param colnames Character string specifying the column name in column data to use as cell names (optional)
 #' @param auto_detect Logical. Whether to attempt automatic detection of column names
+#' @param verbose Logical. Whether to print messages when auto-detecting or auto-selecting columns
 #' @param ... Additional arguments passed to the conversion function
 #' @return A SingleCellExperiment object
 #' @method as.SingleCellExperiment.1CB 1CellbioData
 #' @export
-as.SingleCellExperiment.1CB.1CellbioData <- function(object, rownames = NULL, colnames = NULL, auto_detect = TRUE, ...) {
+as.SingleCellExperiment.1CB.1CellbioData <- function(object, rownames = NULL, colnames = NULL, auto_detect = TRUE, verbose = TRUE, ...) {
   # Validate column names with auto-detection
-  validated <- validate_column_names(object, rownames, colnames, auto_detect)
+  validated <- validate_column_names(object, rownames, colnames, auto_detect, verbose)
 
   # Call deprecated function with validated parameters
   as.SingleCellExperiment.1CellbioData(object,

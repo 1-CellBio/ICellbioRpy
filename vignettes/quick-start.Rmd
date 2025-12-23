@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 # ICellbioRpy Quick Start Guide
 
-ICellbioRpy is an R package that enables seamless conversion between 1CellBio results and popular single-cell analysis formats (Seurat, SingleCellExperiment, H5AD).
+ICellbioRpy is an R package that enables seamless conversion between single-cell data formats, including 1CellBio results, Stereo-seq GEF files, 10X MTX, and popular analysis formats (Seurat, SingleCellExperiment, H5AD).
 
 ## Installation
 
@@ -37,23 +37,32 @@ devtools::install_github("1-Cellbio/ICellbioRpy")
 library(ICellbioRpy)
 ```
 
-### 2. Configure Python environment (REQUIRED)
+### 2. Configure Python environment (REQUIRED for H5AD operations)
 
-**⚠️ CRITICAL**: You MUST configure your Python environment before using ANY conversion functions. This step is mandatory and cannot be skipped:
+**⚠️ CRITICAL**: You MUST configure your Python environment before using ANY H5AD conversion functions:
 
 ```{r python-config}
-# REQUIRED: Configure with your conda environment name
+# Method 1: Automatic configuration (recommended)
+configure_python_env(verbose = TRUE)
+
+# Method 2: Smart interactive configuration - lists available environments
+smart_python_config(verbose = TRUE, interactive = TRUE)
+
+# Method 3: Configure with your conda environment name
 configure_python_env(conda_env = "1cellbio", verbose = TRUE)
 
-# Replace "1cellbio" with your actual conda environment name
-# This environment must have anndata, pandas, and numpy installed
+# Method 4: Configure with specific Python path
+configure_python_env(python_path = "/path/to/python", verbose = TRUE)
+
+# Verify configuration
+check_anndata_available()
 ```
 
 **Important notes:**
-- This configuration has timeout protection (30 seconds)
-- If configuration fails, all conversion functions will fail
-- Make sure your conda environment exists and has anndata installed
-- Run this command immediately after loading the package
+- The `smart_python_config()` function automatically detects conda environments with anndata installed
+- If multiple environments are found, you'll be prompted to select one interactively
+- If only one environment has anndata, it will be auto-selected
+- This environment must have anndata, pandas, and numpy installed
 
 ## Basic Usage
 
@@ -62,6 +71,9 @@ configure_python_env(conda_env = "1cellbio", verbose = TRUE)
 ```{r read-1cellbio}
 # Read 1CellBio ZIP file
 data <- read1Cellbio("path/to/your/1cellbio_results.zip")
+
+# View available columns
+show_column_options(data)
 ```
 
 ### 2. Convert to Different Formats
@@ -69,9 +81,11 @@ data <- read1Cellbio("path/to/your/1cellbio_results.zip")
 #### Convert to Seurat
 
 ```{r to-seurat}
-# Convert to Seurat object
-# You need to specify which columns to use as gene and cell names
-seurat_obj <- as.Seurat.1CB(data, 
+# Convert to Seurat object with auto-detection (recommended)
+seurat_obj <- as.Seurat.1CB(data)
+
+# Or manually specify columns
+seurat_obj <- as.Seurat.1CB(data,
                            rownames = "gene_id",    # column for gene names
                            colnames = "cell_id")    # column for cell names
 ```
@@ -79,9 +93,12 @@ seurat_obj <- as.Seurat.1CB(data,
 #### Convert to SingleCellExperiment
 
 ```{r to-sce}
-# Convert to SingleCellExperiment object
-sce <- as.SingleCellExperiment.1CB(data, 
-                                  rownames = "gene_id", 
+# Convert to SingleCellExperiment object with auto-detection
+sce <- as.SingleCellExperiment.1CB(data)
+
+# Or manually specify columns
+sce <- as.SingleCellExperiment.1CB(data,
+                                  rownames = "gene_id",
                                   colnames = "cell_id")
 ```
 
@@ -92,12 +109,44 @@ sce <- as.SingleCellExperiment.1CB(data,
 iCellbio2H5ad(
   zip_file = "path/to/your/1cellbio_results.zip",
   h5ad_path = "output.h5ad",
-  rownames = "gene_id",
-  colnames = "cell_id"
+  overwrite = FALSE,              # do not overwrite existing files
+  name_conflict = "make_unique"   # auto-rename on conflicts
 )
 ```
 
-### 3. Reverse Conversions
+### 3. Stereo-seq Spatial Transcriptomics
+
+ICellbioRpy supports reading Stereo-seq GEF files with complete cell boundary information.
+
+#### Read GEF Files
+
+```{r read-gef}
+# Read GEF file with cell boundaries
+stereo_data <- read_gef("sample1.gef",
+                        bin_type = "cell_bins",
+                        include_cellborder = TRUE)
+
+# Convert to Seurat
+seurat_stereo <- as.Seurat(stereo_data)
+
+# Spatial coordinates in reductions
+seurat_stereo@reductions$spatial
+
+# Cell boundaries in @misc
+seurat_stereo@misc$cell_borders
+```
+
+#### Direct GEF to H5AD Conversion
+
+```{r gef-to-h5ad}
+# Direct conversion (memory efficient)
+gef_to_h5ad("sample1.gef", "output.h5ad",
+            bin_type = "cell_bins",
+            include_cellborder = TRUE,
+            include_spatial = TRUE)
+```
+
+### 4. Reverse Conversions
 
 #### H5AD to Seurat
 
@@ -110,17 +159,21 @@ seurat_obj <- h5ad_to_seurat("data.h5ad")
 
 ```{r h5ad-to-sce}
 # Convert H5AD file to SingleCellExperiment
-sce <- h5ad_to_sce("data.h5ad")
+sce <- h5ad_to_sce("data.h5ad",
+                  use_x_as = "auto",            # auto-detect X layer type
+                  name_conflict = "make_unique") # naming conflict handling
 ```
 
 #### Seurat to H5AD
 
 ```{r seurat-to-h5ad}
 # Convert Seurat object to H5AD file
-seurat_to_h5ad(seurat_obj, "output.h5ad")
+seurat_to_h5ad(seurat_obj, "output.h5ad",
+               overwrite = FALSE,
+               name_conflict = "make_unique")
 ```
 
-### 4. 10X Data Integration
+### 5. 10X Data Integration
 
 ```{r 10x-integration}
 # Create sample information CSV
@@ -140,13 +193,52 @@ read_10x_mtx_to_h5ad(
 )
 ```
 
+### 6. GMT Gene Set Preprocessing
+
+ICellbioRpy provides GMT file preprocessing with gene ID mapping support.
+
+```{r gmt-preprocessing}
+# Basic usage
+preprocess_gmt_custom(
+  gmt_file = "pathways.gmt",
+  species = "9606",          # 9606 = human, 10090 = mouse
+  output_dir = "gesel_output"
+)
+
+# Supported species: 9606 (human), 10090 (mouse), 10116 (rat),
+# 7227 (fruit fly), 6239 (nematode), 7955 (zebrafish), 9598 (chimpanzee)
+```
+
+#### Performance Optimization for Batch Processing
+
+```{r gmt-batch}
+# Step 1: Pre-build lookup tables for all species
+prebuild_gene_lookup_tables(
+  data_dir = "~/gene_mapping_data",
+  output_file = "gene_lookup_tables.rdata"
+)
+
+# Step 2: Load into global environment
+load("gene_lookup_tables.rdata")
+
+# Step 3: Process GMT files (auto-uses pre-built tables)
+preprocess_gmt_custom("pathways.gmt", species = "9606")
+
+# Batch process multiple GMT files
+for (gmt in list.files(pattern = "\\.gmt$")) {
+  preprocess_gmt_custom(gmt, species = "9606")
+}
+```
+
 ## Key Features
 
 - **Memory Efficient**: Preserves sparse matrix format throughout conversions
-- **Multi-format Support**: Seamlessly convert between R and Python formats
-- **Batch Processing**: Integrate multiple 10X samples in one step
+- **Multi-format Support**: 1CellBio, Stereo-seq GEF, 10X MTX, Seurat, SingleCellExperiment, H5AD
+- **Spatial Transcriptomics**: Complete cell boundary information from GEF files
+- **GMT Preprocessing**: Gene ID mapping for multiple species
+- **Smart Python Configuration**: Automatic detection and configuration
+- **Batch Processing**: Integrate multiple samples efficiently
 - **Robust Error Handling**: Clear error messages and validation
-- **Multilingual Support**: Chinese and English documentation
 
 ## Advanced Options
 
@@ -154,8 +246,8 @@ read_10x_mtx_to_h5ad(
 
 ```{r name-conflicts}
 # Handle duplicate names automatically
-seurat_obj <- as.Seurat.1CB(data, 
-                           rownames = "gene_id", 
+seurat_obj <- as.Seurat.1CB(data,
+                           rownames = "gene_id",
                            colnames = "cell_id",
                            name_conflict = "make_unique")  # or "error"
 ```
@@ -174,8 +266,29 @@ sce <- h5ad_to_sce("data.h5ad", use_x_as = "counts")  # or "logcounts", "auto"
 seurat_to_h5ad(seurat_obj, "output.h5ad", overwrite = TRUE)
 ```
 
+### Column Auto-Detection
+
+```{r column-detection}
+# Auto-detection with bilingual warning
+# If column detection fails, automatically uses first available column
+seurat_obj <- as.Seurat.1CB(data)  # auto-detects columns
+
+# View available columns if needed
+show_column_options(data)
+```
+
+## Spatial Visualization
+
+```{r spatial-viz}
+# Plot with cell borders
+plot_cells_with_borders(stereo_data,
+                        color_by = "cluster",
+                        show_borders = TRUE,
+                        border_color = "gray")
+```
+
 ## Next Steps
 
 - Check out the [Advanced Usage](advanced-usage.html) guide for more complex workflows
 - Browse the [Function Reference](../reference/index.html) for detailed documentation
-- Follow the step-by-step [Tutorials](../index.html#tutorials) for specific use cases
+- Read the [Introduction](introduction.html) vignette for complete feature overview

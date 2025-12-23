@@ -130,9 +130,10 @@ show_column_options <- function(object) {
 #' @param rownames Column name for gene identifiers
 #' @param colnames Column name for cell identifiers
 #' @param auto_detect Whether to try auto-detection if names are NULL
+#' @param verbose Whether to print messages when auto-generating column names
 #' @return List with validated column names
 #' @keywords internal
-validate_column_names <- function(object, rownames = NULL, colnames = NULL, auto_detect = TRUE) {
+validate_column_names <- function(object, rownames = NULL, colnames = NULL, auto_detect = TRUE, verbose = TRUE) {
   # Read metadata
   coldata_path <- file.path(object$base_path, object$experiment$summarized_experiment$column_data$resource$path)
   rowdata_path <- file.path(object$base_path, object$experiment$summarized_experiment$row_data$resource$path)
@@ -149,11 +150,15 @@ validate_column_names <- function(object, rownames = NULL, colnames = NULL, auto
     colnames <- detect_cell_id_column(colnames(coldata_df))
   }
 
-  # Validate
+  # Handle undetected rownames - auto-select first column
   if (is.null(rownames)) {
-    stop("Cannot detect gene identifier column. Available options: ",
-         paste(colnames(rowdata_df), collapse = ", "),
-         "\nUse: as.Seurat.1CB(data, rownames = 'your_choice') or see show_column_options(data)")
+    rownames <- colnames(rowdata_df)[1]
+    if (verbose) {
+      cat(icb_i18n(
+        paste0("⚠️  无法检测到基因标识符列，自动使用第一列: ", rownames, "\n"),
+        paste0("⚠️  Cannot detect gene identifier column, auto-using first column: ", rownames, "\n")
+      ))
+    }
   }
 
   if (!rownames %in% colnames(rowdata_df)) {
@@ -161,10 +166,15 @@ validate_column_names <- function(object, rownames = NULL, colnames = NULL, auto
          paste(colnames(rowdata_df), collapse = ", "))
   }
 
+  # Handle undetected colnames - auto-select first column
   if (is.null(colnames)) {
-    stop("Cannot detect cell identifier column. Available options: ",
-         paste(colnames(coldata_df), collapse = ", "),
-         "\nUse: as.Seurat.1CB(data, colnames = 'your_choice') or see show_column_options(data)")
+    colnames <- colnames(coldata_df)[1]
+    if (verbose) {
+      cat(icb_i18n(
+        paste0("⚠️  无法检测到细胞标识符列，自动使用第一列: ", colnames, "\n"),
+        paste0("⚠️  Cannot detect cell identifier column, auto-using first column: ", colnames, "\n")
+      ))
+    }
   }
 
   if (!colnames %in% colnames(coldata_df)) {

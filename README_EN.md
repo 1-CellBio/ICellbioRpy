@@ -12,11 +12,14 @@ ICellbioRpy is a professional R package for single-cell RNA-seq data format conv
 ### ✨ Key Features
 
 - 🚀 **One-Click Conversion**: 1CellBio ZIP → H5AD/Seurat/SingleCellExperiment
+- 🗂️ **Stereo-seq Support**: Native GEF file reading with complete cell boundary information
 - 📊 **Multi-Sample Integration**: Integrate multiple 10X MTX files into single H5AD
+- 🎨 **Spatial Visualization**: High-quality spatial transcriptomics visualization with cell boundaries
 - 💾 **Memory Efficient**: Automatically preserves sparse matrix format, saving 70-90% storage
 - 🔄 **Bidirectional Conversion**: R objects ↔ Python formats
 - 🎨 **Beginner-Friendly**: Super detailed environment setup tutorials
 - 🐍 **Smart Python Configuration**: Automatic Python environment detection and configuration
+- 🧫 **GMT Preprocessing**: Convert GMT files to gesel format with gene ID mapping
 
 ---
 
@@ -91,6 +94,9 @@ configure_python_env(conda_env = "1cellbio", verbose = TRUE)
 
 # Method 3: Specify Python path
 configure_python_env(python_path = "/path/to/python", verbose = TRUE)
+
+# Method 4: Smart interactive configuration (lists available environments)
+smart_python_config(verbose = TRUE, interactive = TRUE)
 
 # Verify configuration
 check_anndata_available()
@@ -178,7 +184,66 @@ read_10x_mtx_to_h5ad(
 )
 ```
 
-#### 5. H5AD → R Objects (reverse conversion)
+#### 5. Stereo-seq GEF → R Objects (spatial transcriptomics)
+
+```r
+# Read Stereo-seq GEF file (with cell boundaries)
+stereo_data <- read_gef(
+  file_path = "sample.cellbin.gef",
+  bin_type = "cell_bins",
+  include_cellborder = TRUE
+)
+
+# Convert to Seurat object (automatically preserves cell boundaries)
+seurat_obj <- as.Seurat(stereo_data)
+
+# Convert to SingleCellExperiment object
+sce_obj <- as.SingleCellExperiment(stereo_data)
+
+# Spatial visualization (with cell borders)
+plot_cells_with_borders(
+  seurat_obj,
+  color_by = "area",           # Color by cell area
+  show_borders = TRUE,         # Show cell boundaries
+  border_color = "white"
+)
+
+# Memory-optimized reading (large file handling)
+stereo_subset <- read_gef(
+  "large.cellbin.gef",
+  max_cells = 5000,                           # Limit cell count
+  region = c(1000, 5000, 1000, 5000)        # Spatial region filter
+)
+```
+
+#### 6. Stereo-seq GEF → H5AD (for Python analysis)
+
+```r
+# Method 1: Two-step conversion
+stereo_data <- read_gef("sample.cellbin.gef", include_cellborder = TRUE)
+stereo_to_h5ad(stereo_data, "output.h5ad", include_spatial = TRUE)
+
+# Method 2: Direct conversion (recommended, memory efficient)
+gef_to_h5ad(
+  gef_file = "sample.cellbin.gef",
+  h5ad_file = "output.h5ad",
+  bin_type = "cell_bins",
+  include_cellborder = TRUE,    # cell_borders stored in adata.uns
+  include_spatial = TRUE,       # spatial coordinates stored in adata.obsm
+  max_cells = 10000            # memory management
+)
+
+# Large file handling: region filter + gene filter
+gef_to_h5ad(
+  gef_file = "large_sample.cellbin.gef",
+  h5ad_file = "filtered.h5ad",
+  region = c(1000, 5000, 1000, 5000),      # spatial region filter
+  gene_list = c("GAPDH", "ACTB", "CD45"),  # gene filter
+  overwrite = TRUE
+)
+```
+
+#### 7. H5AD → R Objects (reverse conversion)
 
 ```r
 # H5AD to SingleCellExperiment
@@ -197,9 +262,13 @@ sce <- h5ad_to_sce("data.h5ad", use_x_as = "counts")
 
 ### Core Conversion Functions
 - `read1Cellbio()` - Read 1CellBio results from ZIP file
+- `read_gef()` - **New feature**: Read Stereo-seq GEF files (supports cell boundaries)
+- `gef_to_h5ad()` - **New feature**: GEF file direct to H5AD conversion (cell borders stored in uns)
+- `stereo_to_h5ad()` - **New feature**: StereoData object to H5AD format
 - `iCellbio2H5ad()` - **Direct conversion**: ZIP → H5AD (memory efficient)
 - `as.Seurat.1CB()` - 1CellbioData → Seurat object
 - `as.SingleCellExperiment.1CB()` - 1CellbioData → SingleCellExperiment object
+- `plot_cells_with_borders()` - **New feature**: Spatial transcriptomics visualization (cell boundaries)
 - `seurat_to_h5ad()` - Seurat object → H5AD file
 - `read_10x_mtx_to_h5ad()` - **New feature**: Multi-sample 10X data integration
 - `h5ad_to_sce()` - H5AD → SingleCellExperiment
@@ -207,7 +276,13 @@ sce <- h5ad_to_sce("data.h5ad", use_x_as = "counts")
 
 ### Environment Configuration Functions
 - `configure_python_env()` - Smart Python environment configuration
+- `smart_python_config()` - **New feature**: Interactive environment selection with auto-detection
 - `check_anndata_available()` - Check anndata availability
+
+### GMT Gene Set Preprocessing Functions
+- `preprocess_gmt_custom()` - **New feature**: Convert GMT files to gesel format
+- `preprocess_gmt_with_custom_mapping()` - Process GMT with custom gene mapping files
+- `prebuild_gene_lookup_tables()` - **New feature**: Pre-build gene lookup tables (performance optimization)
 
 ---
 

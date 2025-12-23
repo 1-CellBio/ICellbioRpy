@@ -15,13 +15,16 @@ library(ICellbioRpy)
 
 ## 🚀 核心功能概览
 
-ICellbioRpy提供完整的单细胞数据格式转换生态系统：
+ICellbioRpy提供完整的单细胞和空间转录组数据格式转换生态系统：
 
 - **读取1Cellbio结果** → `read1Cellbio()`
-- **转换为h5ad格式** → `iCellbio2H5ad()`
+- **读取Stereo-seq GEF文件** → `read_gef()`
+- **转换为h5ad格式** → `iCellbio2H5ad()`, `gef_to_h5ad()`
 - **h5ad转R对象** → `h5ad_to_sce()`, `h5ad_to_seurat()`
 - **R对象转h5ad** → `seurat_to_h5ad()`
-- **Python环境配置** → `configure_python_env()`
+- **空间转录组可视化** → `plot_cells_with_borders()`
+- **GMT基因集预处理** → `preprocess_gmt_custom()`
+- **Python环境配置** → `configure_python_env()`, `smart_python_config()`
 
 ## 🔧 Python环境配置
 
@@ -47,6 +50,22 @@ configure_python_env(python_path = "/usr/local/bin/python3")
 # 详细输出（用于调试）
 configure_python_env(verbose = TRUE)
 ```
+
+### 智能交互式配置（推荐）
+
+```r
+# 自动检测所有conda环境，并列出包含anndata的环境供选择
+smart_python_config(verbose = TRUE, interactive = TRUE)
+
+# 输出示例：
+# 📋 Found multiple environments with anndata:
+#   1. 1cellbio (anndata 0.12.0)
+#   2. atlas (anndata 0.11.3)
+#   3. scanpy (anndata 0.10.9)
+# Please select environment to use (1-3):
+```
+
+如果只有一个环境包含 anndata，会自动选择；如果有多个，会提示用户选择。
 
 ### 避免自动安装提示
 
@@ -88,9 +107,9 @@ print(data)
 sce <- as.SingleCellExperiment.1CB(data)
 
 # 方法2：手动指定列名
-sce <- as.SingleCellExperiment(data,
-                              rownames = "id",        # 基因名列
-                              colnames = "cell_id")   # 细胞名列
+sce <- as.SingleCellExperiment.1CB(data,
+                                   rownames = "id",        # 基因名列
+                                   colnames = "cell_id")   # 细胞名列
 
 # 方法3：查看可用选项后再转换
 show_column_options(data)
@@ -126,9 +145,9 @@ pca_coords <- reducedDim(sce, "PCA")
 seurat <- as.Seurat.1CB(data)
 
 # 方法2：手动指定列名
-seurat <- as.Seurat(data,
-                   rownames = "id",        # 基因名列
-                   colnames = "cell_id")   # 细胞名列
+seurat <- as.Seurat.1CB(data,
+                        rownames = "id",        # 基因名列
+                        colnames = "cell_id")   # 细胞名列
 
 # 方法3：关闭自动检测并指定列名
 seurat <- as.Seurat.1CB(data,
@@ -153,6 +172,14 @@ pca_coords <- Embeddings(seurat, reduction = "pca")
 # 一步转换：zip → h5ad
 iCellbio2H5ad("1cellbio_results.zip", "output.h5ad")
 
+# 带参数控制
+iCellbio2H5ad(
+  "1cellbio_results.zip",
+  "output.h5ad",
+  overwrite = FALSE,              # 不覆盖已存在的文件
+  name_conflict = "make_unique"   # 命名冲突时自动重命名 ("make_unique" 或 "error")
+)
+
 # 检查输出文件
 file.exists("output.h5ad")
 #> [1] TRUE
@@ -160,6 +187,12 @@ file.exists("output.h5ad")
 # 查看文件大小
 file.info("output.h5ad")$size / (1024^2)  # MB
 ```
+
+**参数说明：**
+- `overwrite`: 是否覆盖已存在的输出文件（默认 FALSE）
+- `name_conflict`: 命名冲突处理策略
+  - `"make_unique"`: 自动重命名冲突的行名列名
+  - `"error"`: 在冲突时报错
 
 ## 🔄 双向h5ad转换
 
@@ -172,6 +205,13 @@ sce <- h5ad_to_sce("data.h5ad")
 # h5ad → Seurat
 seurat <- h5ad_to_seurat("data.h5ad")
 
+# 带参数控制
+sce <- h5ad_to_sce(
+  "data.h5ad",
+  use_x_as = "auto",            # 自动检测 X 层类型 ("auto"/"logcounts"/"counts")
+  name_conflict = "make_unique" # 命名冲突处理策略
+)
+
 # 查看转换结果
 assayNames(sce)
 #> [1] "X" "raw"
@@ -179,6 +219,13 @@ assayNames(sce)
 names(seurat@reductions)
 #> [1] "X_pca" "X_umap"
 ```
+
+**参数说明：**
+- `use_x_as`: X 矩阵的解析方式
+  - `"auto"`: 自动检测（默认）
+  - `"logcounts"`: 作为标准化数据
+  - `"counts"`: 作为原始计数
+- `name_conflict`: 命名冲突处理策略（"make_unique" 或 "error"）
 
 ### 从R对象到h5ad
 
@@ -194,6 +241,102 @@ seurat_to_h5ad(
 # 验证转换
 file.exists("seurat_output.h5ad")
 #> [1] TRUE
+```
+
+## 🧬 Stereo-seq 空间转录组支持
+
+ICellbioRpy 支持 Stereo-seq GEF 文件格式的读取和转换，包括细胞分割数据和细胞边界信息。
+
+### 读取 GEF 文件
+
+```r
+# 读取 GEF 文件（包含细胞边界）
+stereo_data <- read_gef(
+  "sample1.gef",
+  bin_type = "cell_bins",      # 使用细胞分割数据
+  include_cellborder = TRUE    # 包含细胞边界信息
+)
+```
+
+### 转换为 R 对象
+
+```r
+# 转换为 Seurat 对象
+seurat <- as.Seurat(stereo_data)
+
+# 空间坐标存储在 reductions 中
+seurat@reductions$spatial
+#> Coordinate system: spatial
+
+# 细胞边界存储在 @misc 中
+seurat@misc$cell_borders
+
+# 转换为 SingleCellExperiment
+sce <- as.SingleCellExperiment(stereo_data)
+
+# 空间坐标在 reducedDims 中
+reducedDim(sce, "spatial")
+```
+
+### 空间可视化
+
+```r
+# 绘制带细胞边界的空间细胞图
+plot_cells_with_borders(
+  stereo_data,
+  color_by = "cluster",        # 按聚类着色
+  show_borders = TRUE,         # 显示细胞边界
+  border_color = "gray",       # 边界颜色
+  border_size = 0.5,           # 边界线宽
+  point_size = 1               # 细胞点大小
+)
+
+# 按基因表达着色
+plot_cells_with_borders(
+  stereo_data,
+  color_by = "EPCAM",
+  show_borders = TRUE
+)
+```
+
+### 直接转换为 H5AD
+
+```r
+# GEF → H5AD 直接转换（内存高效）
+gef_to_h5ad(
+  "../C04042E3.cellbin.gef",
+  "output.h5ad",
+  bin_type = "cell_bins",
+  include_cellborder = TRUE,    # 保留细胞边界
+  include_spatial = TRUE,       # 保留空间坐标
+  overwrite = FALSE
+)
+
+# 或者先读取再转换
+stereo_to_h5ad(
+  stereo_data,
+  "output.h5ad",
+  layer = "counts"
+)
+```
+
+### 高级选项
+
+```r
+# 读取特定空间区域
+stereo_data <- read_gef(
+  "sample.gef",
+  region = c(1000, 3000, 1000, 3000),  # minX, maxX, minY, maxY
+  max_cells = 10000,                    # 限制细胞数量
+  gene_list = c("EPCAM", "KRT8", "VIM") # 仅读取指定基因
+)
+
+# 使用方形 bins（不使用细胞分割）
+stereo_bins <- read_gef(
+  "sample.gef",
+  bin_type = "bins",
+  bin_size = 50  # 50x50 像素的 bin
+)
 ```
 
 ## 🔬 与分析工具集成
@@ -280,6 +423,89 @@ sce_list <- lapply(h5ad_files, function(file) {
 })
 
 names(sce_list) <- gsub(".h5ad", "", basename(h5ad_files))
+```
+
+## 🧫 GMT 基因集预处理
+
+ICellbioRpy 提供 GMT（Gene Matrix Transposed）文件预处理功能，支持多种基因 ID 类型映射。
+
+### 基本用法
+
+```r
+# 预处理 GMT 文件
+preprocess_gmt_custom(
+  gmt_file = "pathways.gmt",
+  species = "9606",          # 物种 ID（9606 = 人类）
+  output_dir = "gesel_output"
+)
+```
+
+### 支持的物种
+
+| 物种 ID | 物种名称 |
+|---------|----------|
+| 9606 | 人类 (Homo sapiens) |
+| 10090 | 小鼠 (Mus musculus) |
+| 10116 | 大鼠 (Rattus norvegicus) |
+| 7227 | 果蝇 (Drosophila melanogaster) |
+| 6239 | 线虫 (Caenorhabditis elegans) |
+| 7955 | 斑马鱼 (Danio rerio) |
+| 9598 | 猩猩 (Pan troglodytes) |
+
+### 性能优化：预构建查找表
+
+对于大量 GMT 文件处理，可以预构建基因查找表以提升性能：
+
+```r
+# 第一步：预构建所有物种的查找表
+prebuild_gene_lookup_tables(
+  data_dir = "~/gene_mapping_data",
+  output_file = "gene_lookup_tables.rdata"
+)
+
+# 第二步：加载到全局环境（创建 master_lookup_tables 变量）
+load("gene_lookup_tables.rdata")
+
+# 第三步：调用预处理函数，会自动检测并使用预构建的表
+preprocess_gmt_custom("pathways.gmt", species = "9606")
+
+# 批量处理多个 GMT 文件（性能优势明显）
+for (gmt in list.files(pattern = "\\.gmt$")) {
+  preprocess_gmt_custom(gmt, species = "9606")
+}
+```
+
+**说明：** 预构建的查找表通过全局环境变量 `master_lookup_tables` 隐式传递给预处理函数。加载后，`preprocess_gmt_custom()` 会自动检测并使用它，无需显式传递参数。
+
+### 输出格式
+
+预处理后会在输出目录生成以下文件：
+
+```
+gesel_output/
+├── collections.tsv       # 集合元数据
+├── sets.tsv              # 基因集定义
+├── set2gene.tsv          # 集合到基因映射（差分编码）
+└── gene2gene.tsv         # 基因 ID 映射（差分编码）
+```
+
+### 高级用法
+
+```r
+# 使用自定义映射文件
+preprocess_gmt_with_custom_mapping(
+  gmt_file = "custom_pathways.gmt",
+  species = "10090",  # 小鼠
+  gene_mapping_files = list(
+    symbol = "mouse_symbols.tsv",
+    entrez = "mouse_entrez.tsv",
+    ensembl = "mouse_ensembl.tsv"
+  ),
+  collection_name = "mouse_pathways",
+  collection_desc = "Custom mouse pathways",
+  output_dir = "mouse_gesel",
+  auto_download_missing = TRUE  # 自动下载缺失的映射文件
+)
 ```
 
 ## 🛠️ 故障排除
