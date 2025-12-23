@@ -37,5 +37,12 @@ QUICK_START_OPTIMIZATION_SUMMARY.md
 WeChat_Article.md
 python/
 
+# Claude Code development
+CLAUDE.md
+
+# Example files and data
+examples/
+data/
+
 .github/workflows
 _pkgdown.yml
